@@ -41,7 +41,12 @@
 fluentdよりもLogstashの方が世界的に使われていると言えそうです。
 
 === Beats
-　こちらもLogstash同様、
+　こちらもLogstash同様、Elastic社製のOSSです（URL:@<href>{https://www.elastic.co/jp/products/beats}）。
+Go言語で記載されたデータジッパーです。Beatsは用途によって名称・機能が変わるソフトウェアです。
+例えばサーバーの負荷情報はMetricbeatで収集し、死活監視はHeartbeatで行うといったように使い分けます。
+
+　単一の機能しか提供しない代わりに、軽量に動作できるのでサーバー監視時に重宝するツールです。
+Filebeatを使用すると、ファイルの収集も可能です。
 
 === embulk
 　fluentd同様、Tresure Data社製のOSSです（URL:@<href>{http://www.embulk.org}）。
