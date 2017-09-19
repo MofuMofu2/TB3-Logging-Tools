@@ -8,6 +8,18 @@
 
 == インストール
 === fluentd
+
+==== fluentdのインストール
+fluentdは@<b>{td-agent}という名称で公式からパッケージが配布されています。インストールする際はこちらを利用することが
+推奨されているので、ありがたく使わせていただきましょう。提供されているシェルスクリプトをcurlコマンドでGETすると
+インストールまで完了します。
+
+==== 動作確認
+インストール後は@<code>{/etc/init.d/td-agent}にデーモンスクリプトが配置されますので、起動できるかを確認しましょう。
+
+最後に、テストデータをfluentdに投げて処理ができるかも確認しておきましょう。ポートが空いているかは事前に確認しておくと良いです。
+
+
 === Logstash
 
 ==== Javaのインストール
@@ -17,11 +29,10 @@ LogstashはJRubyでプラグインが作成されているため、動作にはJ
 //cmd{
 # Javaがインストールされていない場合
 $ sudo yum install java
+（動作ログに入れ替える）
 
 $ java -version
-java version "1.8.0_45"
-Java(TM) SE Runtime Environment (build 1.8.0_45-b14)
-Java HotSpot(TM) 64-Bit Server VM (build 25.45-b02, mixed mode)
+入れる
 //}
 
 ==== 動作確認用のlogstash.conf作成
