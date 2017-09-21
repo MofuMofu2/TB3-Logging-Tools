@@ -27,7 +27,7 @@ Logstashのconfigファイルは癖があるので、悩まれている方は考
 == 注意事項とか
 
 この本に出てくる各ソフトウェアのバージョンは下記の通りです。
-また、第1章から第X章まではCentOS6、それ以降はAmazon Linuxを使用して動作を確認しています。
+また、第1章から第6章まではCentOS6、それ以降はAmazon Linuxを使用して動作を確認しています。
 
 * Logstash
 ** Version 6.0(Beta)
