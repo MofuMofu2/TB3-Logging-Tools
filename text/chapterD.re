@@ -1,6 +1,14 @@
 = 比較その2：コンフィグの形式
 fluentdとLogstashのコンフィグ形式は、かなり違いがあります。
 ここではデータの読み取り・加工・出力に分けて、コンフィグの比較をしてみたいと思います。
+なお、今回のコンフィグ例ではTwitterから取得したjsonデータをcsvに加工する、というユースケースを想定しています。
+Twitterから取得できるjsonの例をあげます@<fn>{example_twitter}。
+
+//footnote[example_twitter][これはもふもふのTweetをいくつか取得したものです。大したことはつぶやいていませんね。]
+
+//list[twitter_json][Twitterから取得したつぶやきデータの例]{
+  jsonを挿入
+//}
 
 == fluentd
 
