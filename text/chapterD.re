@@ -22,8 +22,16 @@ Twitterから取得できるjsonの例をあげます@<fn>{example_twitter}。
 == Logstash
 
 === コンフィグの構造
+対するLogstashのコンフィグ（@<code>{logstash.conf}）の構造は、次のようになっています。
 
-=== データの読み取り部（）
-=== データの加工部（）
-=== データの送付部（）
+//image[Logstash_config][Logstashのコンフィグ構造][scale=0.3]{
+//}
+
+特徴として、コンフィグにはデータ処理の内容しか記載しないこと・各データに対するタグ付けが任意であることが挙げられます。
+Logstash自体のソフトウェアに関する動作設定は、全て@<code>{/etc}配下にある設定ファイル（@<code>{logstash.yml}）で行います。
+ここでは@<code>{logstash.conf}のみに焦点を絞って中身をみていきます。
+
+=== データの読み取り部（input）
+=== データの加工部（filter）
+=== データの送付部（output）
 === その他特徴など
