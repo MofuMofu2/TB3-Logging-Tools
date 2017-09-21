@@ -23,7 +23,7 @@ Twitterから取得できるjsonの例をあげます@<fn>{example_twitter}。
 
 === コンフィグの構造
 対するLogstashのコンフィグ（@<code>{logstash.conf}）の構造は、次のようになっています。
-また、コンフィグは@@<code>{/etc/logstash/conf.d}配下に置きます。名称の最後を@<code>{.conf}にして配置します。
+また、コンフィグは@<code>{/etc/logstash/conf.d}配下に置きます。名称の最後を@<code>{.conf}にして配置します。
 
 //image[Logstash_config][Logstashのコンフィグ構造][scale=0.3]{
 //}
@@ -33,13 +33,28 @@ Logstash自体のソフトウェアに関する動作設定は、全て@<code>{/
 ここでは@<code>{logstash.conf}のみに焦点を絞って中身をみていきます。
 
 === データの読み取り部（input）
+Logstashがどのデータを読み取るのか、この部分で指定します。必須設定項目はプラグインごとに異なり、共通のものはありません。
+取得したいデータに合わせてどのプラグインを使用するか決定し、使用方法を確認する必要があります。
 
+今回はサーバー内に配置されたjsonファイルを取得するため、@<code>{file}プラグインを使用します（@<href>{https://www.elastic.co/guide/en/logstash/6.0/plugins-inputs-file.html}）。
+
+//list[input_json_logstash][inputプラグインの実装例]{
+  jsonを取得するためのプラグインを記載
+//}
 
 === データの加工部（filter）
+読み取ったデータをどのように加工するのかを指定します。こちらも処理内容によってプラグインが異なります。
+
+//list[filter_json_logstash][filterプラグインの実装例]{
+  jsonを加工するためのプラグインを記載
+//}
+
+
+
 === データの送付部（output）
 === その他特徴など
 ==== 複数のlogstash.confは両立できるが、注意が必要
-Logstashは取得するデータごとに@@<code>{logstash.conf}を作成し、@<code>{/etc/logstash/conf.d}配下に置いて動作させることができます。
+Logstashは取得するデータごとに@<code>{logstash.conf}を作成し、@<code>{/etc/logstash/conf.d}配下に置いて動作させることができます。
 
 //list[etc_logstash_conf][複数のコンフィグを作成し配置した例]{
   ディレクトリの中を入れる
@@ -59,4 +74,7 @@ Logstashは取得するデータごとに@@<code>{logstash.conf}を作成し、@
 lsした後に起動＆データ重複されていることを確認
 //}
 
-なので、Logstashでも複数のデータを同じプロセスで取得する場合、tagをつけてデータを別々に管理する必要があります。
+なので、Logstashでも複数のデータを同じプロセスで取得する場合、tagをつけてデータを別々に管理する必要があります@<fn>{some_logstash_conf}。
+
+//footnote[some_logstash_conf][コンフィグを1つにするか複数にするか、どちらがいいのかはElastic社の人も悩みどころらしいです。
+個人的には複数に分けて中身を短くする方が管理しやすそうに思いますが、ちょっとめんどいですね。長くてもめんどいのは一緒ですが。]
