@@ -71,6 +71,8 @@ Logstashがどのデータを読み取るのか、この部分で指定します
 
 
 === データの送付部（output）
+
+
 === その他特徴など
 ==== 複数のlogstash.confは両立できるが、注意が必要
 Logstashは取得するデータごとに@<code>{logstash.conf}を作成し、@<code>{/etc/logstash/conf.d}配下に置いて動作させることができます。
@@ -97,3 +99,19 @@ lsした後に起動＆データ重複されていることを確認
 
 //footnote[some_logstash_conf][コンフィグを1つにするか複数にするか、どちらがいいのかはElastic社の人も悩みどころらしいです。
 個人的には複数に分けて中身を短くする方が管理しやすそうに思いますが、ちょっとめんどいですね。長くてもめんどいのは一緒ですが。]
+
+==== add_fieldとremove_field
+@@<code>{add_field}とは、多くのfilterプラグインについているオプション機能です。
+取得したデータに1つfieldを追加できます（複数fieldの追加も可能です）。
+@@<code>{remove_field}は逆で、指定したfieldを削除することができます。
+そのfieldに入っているデータは全部抹消されます。
+
+
+fieldの数を意図的に操作する、というのは他のElastic製品@@<fn>{Elastic_Stack}（特にElasticsearch）との連携を
+意識しているものと思われます。Elasticsearchでデータを検索するときや、Kibanaでグラフを描画するときは
+field単位でデータを引っ張ってくる感じになるので、意図的にfield数を操作できるようにしているような感じがします。
+
+#@# この辺ちょっと忘れたからあとで調べ直して修正すりーりえ
+
+//footnote[Elastic_Stack][Elastic社製のOSS群はElastic Stackといいます。
+でもElasticsearch,Logstash,KibanaでELKって言ってる人の方が多いですね。そっちの方が短いし。]
