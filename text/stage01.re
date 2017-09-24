@@ -18,3 +18,27 @@
 ここからは、ゆるふわーな感じで書きますので、よろしくお願いしますーヽ(*ﾟдﾟ)ノ
 
  = 環境について
+
+以下のAWSサービスを利用してログの可視化をしちゃいます。
+
+* Cloudfront
+* Elastic Load Balancing
+** Application Load Balancer
+** Classic Load Balancer
+** Cloudtrail
+* S3
+
+可視化するためのサーバ環境は以下の感じです。
+
+* OS
+** Amazon Linux AMI 2017.03.1 (HVM)
+* ElasticStack
+** Logstash 6.0(Beta)
+** Elasticsearch 6.0(Beta)
+** Kibana 6.0(Beta)
+
+本の内容は公式ドキュメントや参考書籍などを元に動作確認を行ってはいますが、
+この本の情報を用いた開発・制作・運用に対して発生した全ての結果に対して責任は負うことはできません。
+必ずご自身の環境でよく検証してから導入をお願いします。
+
+みっちー(Github:@micci184)S
