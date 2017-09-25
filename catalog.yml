@@ -8,5 +8,6 @@ CHAPS:
   - capterE.re
   - capterF.re
 APPENDIX:
-  - editor.re
+
 POSTDEF:
+  - editor.re
