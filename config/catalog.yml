@@ -1,0 +1,12 @@
+PREDEF:
+  - stage01.re
+CHAPS:
+  - capterA.re
+  - capterB.re
+  - capterC.re
+  - capterD.re
+  - capterE.re
+  - capterF.re
+APPENDIX:
+  - editor.re
+POSTDEF:
