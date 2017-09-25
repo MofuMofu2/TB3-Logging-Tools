@@ -15,7 +15,7 @@
 代表的なサービス例としては、Kibana,Grafanaなどがあります。
 この本では詳しく扱いませんが、Kibanaによるデータの可視化を行った画面を一例として載せておきます。
 
-///image[example_kibana][データ可視化ツール（Kibana）の例][scale=0.5]{
+//image[example_kibana][データ可視化ツール（Kibana）の例][scale=0.5]{
   KibanaのDashboardを挿入
 //}
 

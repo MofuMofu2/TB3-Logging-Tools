@@ -1,12 +1,12 @@
 PREDEF:
   - stage01.re
 CHAPS:
-  - capterA.re
-  - capterB.re
-  - capterC.re
-  - capterD.re
-  - capterE.re
-  - capterF.re
+  - chapterA.re
+  - chapterB.re
+  - chapterC.re
+  - chapterD.re
+  - chapterE.re
+  - chapterF.re
 APPENDIX:
 
 POSTDEF:
