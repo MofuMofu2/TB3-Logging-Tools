@@ -95,10 +95,9 @@ Logstashは取得するデータごとに@<code>{logstash.conf}を作成し、@<
 lsした後に起動＆データ重複されていることを確認
 //}
 
-なので、Logstashでも複数のデータを同じプロセスで取得する場合、tagをつけてデータを別々に管理する必要があります@<fn>{some_logstash_conf}。
-
-//footnote[some_logstash_conf][コンフィグを1つにするか複数にするか、どちらがいいのかはElastic社の人も悩みどころらしいです。
-個人的には複数に分けて中身を短くする方が管理しやすそうに思いますが、ちょっとめんどいですね。長くてもめんどいのは一緒ですが。]
+なので、Logstashでも複数のデータを同じプロセスで取得する場合、tagをつけてデータを別々に管理する必要があります。
+ちなみに、コンフィグを1つにするか複数にするか、どちらがいいのかはElastic社の人も悩みどころらしいです。
+個人的には複数に分けて中身を短くする方が管理しやすそうに思いますが、ちょっとめんどいですね。長くてもめんどいのは一緒ですが。
 
 ==== add_fieldとremove_field
 @<code>{add_field}とは、多くのfilterプラグインについているオプション機能です。
@@ -113,8 +112,7 @@ field単位でデータを引っ張ってくる感じになるので、意図的
 
 #@# この辺ちょっと忘れたからあとで調べ直して修正すりーりえ
 
-//footnote[Elastic_Stack][Elastic社製のOSS群はElastic Stackといいます。
-でもElasticsearch,Logstash,KibanaでELKって言ってる人の方が多いですね。そっちの方が短いし。]
+//footnote[Elastic_Stack][Elastic社製のOSS群はElastic Stackといいます。でもElasticsearch,Logstash,KibanaでELKって言ってる人の方が多いですね。そっちの方が短いし。]
 
 === Logstashでお便利なプラグイン
 

@@ -16,8 +16,7 @@ Elastic社が提供するOSSで、特定のデータを加工し送付できる�
 今回はサーバーに対する負荷情報を収集することに特化したMetricbeatを使用しました。
 MetricbeatのデータはElasticsearch@<fn>{Elasticsearch}に入れ、Kibana@<fn>{Kibana}で可視化しています。
 
-//footnote[Elasticsearch][Elastic社が提供する検索エンジンです。Githubとかでも使われています。
-https://www.elastic.co/jp/products/elasticsearch]
+//footnote[Elasticsearch][Elastic社が提供する検索エンジンです。Githubとかでも使われています。https://www.elastic.co/jp/products/elasticsearch]
 
 //footnote[Kibana][こちらもElastic社が提供するデータ可視化ツールです。グラフがみやすい。https://www.elastic.co/jp/products/kibana]
 
