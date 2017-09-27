@@ -15,10 +15,37 @@ Twitterから取得できるjsonの例をあげます@<fn>{example_twitter}。
 == fluentd
 
 === コンフィグの構造
+fluentdのコンフィグ（td-agentを用いてインストールした場合は@<code>{td-agnet.conf}）の構造は、次のようになっています。
+また、コンフィグは@<code>{/etc/td-agent/td-agnet.conf}にデフォルトで配置されているので、こちらを編集していきます。
 
-=== データの読み取り部（）
-=== データの加工部（）
-=== データの送付部（）
+//image[fluentd_config][fluentdのコンフィグ構造][scale=0.3]{
+//}
+
+ただし、処理の順序は@<code>{source}→@<code>{filter}→@<code>{match}となっています。
+
+=== データの読み取り部（source）
+fluentdがどのデータを読み取るのかをこのディレクティブで指定します。データの入力元は複数指定することが可能です。
+@<code>{<source>}と@<code>{</source>}の間に使用したいプラグインを指定していきます。
+この書式は他のディレクティブでも同様です。
+
+
+//list[fluentd_source][source部分の実装例]{
+//}
+
+=== データの加工部（filter）
+読み取ったデータをどのように加工するのか指定するプラグインです。ただし、@@<code>{filter}ディレクティブの中では
+tagの変更ができないため、加工後のデータに新しくtagを付与したい場合は@@<code>{match}ディレクティブで専用プラグインを使用します。
+
+//list[fluentd_filter][filter部分の実装例]{
+//}
+
+
+=== データの送付部（match）
+処理が終わったデータをどこに送付するか指定するディレクティブです。
+プラグインを複数記述すれば、複数の出力先へデータを送付することが可能です。
+
+@<list>{fluentd_match}
+
 === その他特徴など
 
 == Logstash
@@ -80,7 +107,7 @@ Logstashがどのデータを読み取るのか、この部分で指定します
 //}
 
 ちなみに、@<code>{stdout}プラグインを使用すると、加工後のデータを標準出力させることが可能です。
-serviceコマンドでプロセス起動を行うと、@@<code>{logstash.stdout}という名称で標準出力内容が保存されます。
+serviceコマンドでプロセス起動を行うと、@<code>{logstash.stdout}という名称で標準出力内容が保存されます。
 動作確認時に使用すると便利です。
 
 //list[logstash_stdout][stdoutプラグインの例]{
