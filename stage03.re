@@ -88,15 +88,22 @@ Nginxでもいいんですけど、まだApacheのが需要があるのかなー
 
 * 127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
 
-=== アクセスログを取り込んでみる
+=== アクセスログを取り込むための準備
 では、さっきの要領でLogstashを動かしてみるよ！
 まずは、先ほど同様にtest02.confというファイルを作成します。
+また、ログファイルの格納場所も用意します。
 
 //cmd{
-$ conf.d/test02.conf
+### ログディレクトリとサンプルログを配置
+$ mkdir log
+$ vim log/httpd_access.log
+127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+
+### test02.confを作成
+$ vim conf.d/test02.conf
 input {
   file {
-    path => "/etc/logstash/log/httpd_access.log
+    path => "/etc/logstash/log/httpd_access.log"
     start_position => "beginning"
   }
 }
@@ -112,3 +119,29 @@ output {
 その他にもオプションがあるので、詳しくは公式サイトを確認して頂ければと思います。
 
 (File input plugin)[https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html]
+
+=== アクセスログを取り込むよ！
+先ほど、準備したconfファイルを使用してログを取り込んでいきたいと思いますー
+ではでは、早速実行っと。。
+
+//cmd{
+$ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
+{
+      "@version" => "1",
+          "host" => "0.0.0.0",
+          "path" => "/etc/logstash/log/httpd_access.log",
+    "@timestamp" => 2017-10-01T05:33:29.689Z,
+       "message" => "127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326"
+}
+}
+
+あれ？あれれ？？？
+ログがmessageにひとかたまりで入ってるではないですかΣ（￣Д￣;）
+これはあかん。。
+理想は、IPアドレス、バージョン、ステータスコードとかが各フィールドに入っているはずだったのに。。Orz
+
+
+そうなのです。
+このままだと意味のないデータとして取り込まれてしまいます。
+そこでFILTERを利用することで、フィールドを識別し、意味のある結果にさせたいと思います。
+てことで、次章は、アクセスログを綺麗に取り込むための方法について書き書きしていきますーヽ(*ﾟдﾟ)ノ
