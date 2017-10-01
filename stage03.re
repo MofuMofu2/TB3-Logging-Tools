@@ -13,7 +13,7 @@ Logstashを動かすには、confファイルという設定ファイルを読�
 
 === Logstashのディレクトリ構造
 Logstashの一部のディレクトリ構造について記載してますー
-※RPMでLogstashをインストールしてます
+　※RPMでLogstashをインストールしてます
 
 /etc/logstash/
 ├ conf.d　(Logstashに実行させたいINPUT・FILTER・OUTPUTをディレクトリ配下に配置する)
@@ -75,3 +75,40 @@ Hello
 
 Helloと入力したらmessageというフィールドに入ってますね！
 これでLogstashの環境が整いましたーヽ(*ﾟдﾟ)ノ
+
+
+== とりま。Apacheのアクセスログを取り込んでみよう
+最近、Nginxを使用しているmicci184です。
+でも、今回はApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
+Nginxでもいいんですけど、まだApacheのが需要があるのかなー？って思った感じで選んでみました。
+ 　※GoogleトレンドでApache VS Nginxやってみましたが、軍配はApacheでした
+
+以下のサンプルのアクセスログで試していきたいと思いますー
+ログフォーマットは、commnを利用します。
+
+* 127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+
+=== アクセスログを取り込んでみる
+では、さっきの要領でLogstashを動かしてみるよ！
+まずは、先ほど同様にtest02.confというファイルを作成します。
+
+//cmd{
+$ conf.d/test02.conf
+input {
+  file {
+    path => "/etc/logstash/log/httpd_access.log
+    start_position => "beginning"
+  }
+}
+output {
+  stdout { codec => rubydebug }
+}
+//}
+
+今回作成したtest02.confですが、inputにfileというプラグインを記載してます。
+このプラグインは、インプットデータとしてファイルを指定することができます。
+また、ログファイルを読み込み指定をするために"start_position"のオプションを利用してます。
+デフォルトだとendですが、logstashが起動されてから追記されたログを取り込み対象としたいので、biginningを定義してます。
+その他にもオプションがあるので、詳しくは公式サイトを確認して頂ければと思います。
+
+(File input plugin)[https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html]
