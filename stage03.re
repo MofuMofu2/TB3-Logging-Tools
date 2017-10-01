@@ -85,8 +85,9 @@ Nginxでもいいんですけど、まだApacheのが需要があるのかなー
 
 以下のサンプルのアクセスログで試していきたいと思いますー
 ログフォーマットは、commonを利用します。
+あとあと、5.10.83.30のグローバルIPはElastic社の使わせて頂いてますm(_ _)m
 
-* 127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+* 5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
 
 === アクセスログを取り込むための準備
 では、さっきの要領でLogstashを動かしてみるよ！
@@ -97,7 +98,7 @@ Nginxでもいいんですけど、まだApacheのが需要があるのかなー
 ### ログディレクトリとサンプルログを配置
 $ mkdir log
 $ vim log/httpd_access.log
-127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
 
 ### test02.confを作成
 $ vim conf.d/test02.conf
@@ -131,7 +132,7 @@ $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
           "host" => "0.0.0.0",
           "path" => "/etc/logstash/log/httpd_access.log",
     "@timestamp" => 2017-10-01T05:33:29.689Z,
-       "message" => "127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326"
+       "message" => "5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326"
 }
 }
 
