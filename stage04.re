@@ -114,3 +114,9 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 == Grok Constructor
 (Grok Constructor)[http://grokconstructor.appspot.com/do/match]は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
 この他にも(GrokDebugger)[https://grokdebug.herokuapp.com/]やKibanaで提供しているGrokDebuggerなどがあります。
+
+Grok Constructorの使い方を以下の図に記載します。
+
+//image[grok_constructor01][Grok Constructorについて][scale=0.5]{
+  KibanaのDashboardを挿入
+//}
