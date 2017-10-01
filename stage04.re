@@ -225,7 +225,7 @@ responseは、ステータスコードなので、NUMBERを使用します。
 
 === 完成したGrokPattern
 
-* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 
 == Logstashのconfファイルの作成
 
@@ -244,7 +244,7 @@ $ mkdir patterns
 ### httpd用のGrokPatternファイルを作成
 ### GrokPattern名をHTTPD_COMMONLOGとします
 $ vim patterns/httpd_Patterns
-HTTPD_COMMONLOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+HTTPD_COMMONLOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 }
 
 次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。
@@ -270,5 +270,106 @@ output {
 それでは、実行してみますー
 
 //cmd{
-
+$ usr/share/logstash/bin/logstash -f conf.d/test02.conf
+### 結果！！
+{
+        "request" => "/test.html",
+           "auth" => "-",
+          "ident" => "-",
+           "verb" => "GET",
+        "message" => "5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326",
+           "path" => "/etc/logstash/log/httpd_access.log",
+     "@timestamp" => 2017-10-01T15:11:19.695Z,
+       "response" => "200",
+          "bytes" => "2326",
+       "clientip" => "5.10.83.30",
+       "@version" => "1",
+           "host" => "0.0.0.0",
+    "httpversion" => "1.0",
+      "timestamp" => "10/Oct/2000:13:55:36 -0700"
 }
+}
+
+おぉ！いい感じにフィールドが抽出できたーヾ(´Д｀)ノｲｴｰｲ
+が、しかし、コレでは足りない！
+ログのタイムスタンプではなく、ログを取り込んだ時刻になっているので、修正が必要です。
+また、グローバルIPがあるんだから、地域情報とマッピングしたいですよね！
+ということで、Logstashのconfファイルを修正したいと思いますー
+
+//cmd{
+$ vim conf.d/test03.conf
+input {
+  file {
+    path => "/etc/logstash/log/httpd_access.log"
+    start_position => "beginning"
+  }
+}
+filter {
+  grok {
+    match => { "message" => "%{HTTPD_COMMONLOG}" }
+  }
+  geoip {
+    source => "clientip"
+  }
+  date {
+    match => [ "date", "dd/MMM/YYYY:HH:mm:ss Z" ]
+    locale => "en"
+    target => "timestamp"
+  }
+  mutate {
+    remove_field => [ "message", "path", "host" ]
+  }
+}
+output {
+  stdout { codec => rubydebug }
+}
+
+各々のフィルターについて図で説明します。
+
+//image[grok03][confファイルのFilterについて][scale=0.5]{
+  Grokパワポ
+//}
+
+
+それでは、修正したconfファイルで再度実行すると以下の感じになります。
+地理情報やタイムスタンプや不要な情報が削除されていることがわかります。
+
+//cmd{
+{
+        "request" => "/test.html",
+          "geoip" => {
+              "timezone" => "Europe/Amsterdam",
+                    "ip" => "5.10.83.30",
+              "latitude" => 52.35,
+        "continent_code" => "EU",
+             "city_name" => "Amsterdam",
+          "country_name" => "Netherlands",
+         "country_code2" => "NL",
+         "country_code3" => "NL",
+           "region_name" => "North Holland",
+              "location" => {
+            "lon" => 4.9167,
+            "lat" => 52.35
+        },
+           "postal_code" => "1091",
+           "region_code" => "NH",
+             "longitude" => 4.9167
+    },
+           "auth" => "-",
+          "ident" => "-",
+           "verb" => "GET",
+     "@timestamp" => 2017-10-01T15:44:25.815Z,
+       "response" => "200",
+          "bytes" => "2326",
+       "clientip" => "5.10.83.30",
+       "@version" => "1",
+    "httpversion" => "1.0",
+      "timestamp" => "10/Oct/2000:13:55:36 -0700"
+}
+}
+
+
+如何でしたか？
+これでApacheログをGrokを利用して抽出できるようになったのではないでしょうか？
+次は、いままで使ってきたGrokPatternなどを利用してAWSサービスのログを抽出したいと思います。
+それでは、次章でーヽ(*ﾟдﾟ)ノ
