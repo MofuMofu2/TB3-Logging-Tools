@@ -11,7 +11,6 @@
 結構、ステップ面倒いなーって思う人もいるかと思いますが、一つ一つクリアしていくことが大切だと思ってます。
 地味ーな作業が盛りだくさんですが、自分の思った通りにFILTERがかかった時が最高に嬉しい瞬間です！
 
-
 それでは一つ一つ見ていきたいとおもいまするー
 
 == 取り込むログフォーマットを調べる
@@ -194,7 +193,7 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 
  * WORD \b\w+\b
 
-次にパスですが、リクエストによって変動したりするため、柔軟性を求めて以下のNOTSPACEを使用したいと思います。
+次にパスですが、リクエストによって変動したりするため、柔軟性を求めて以下のNOTSPACEを使用します。
 NOTSPACEは、空白文字以外にマッチのため、空白文字が出現するまでマッチします。
 
 * NOTSPACE \S+
@@ -202,15 +201,74 @@ NOTSPACEは、空白文字以外にマッチのため、空白文字が出現す
 最後のHTTPのバージョンですが、HTTP部分は不要なので取り除くのと、そもそも、HTTPバージョンがはいっていないパターンもあったりします。
 そんな時は、(?:)?を利用するこで、このGrokPatternにマッチする時は使うけど、マッチしない時は使わないよ！といった定義ができるのですー
 これは、便利なので覚えて置いてくださいな！
+最後に最短マッチとして、%{DATA}もパイプで組み込んでます。
+
+* (?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})"
+
 
 てことで、ここまでを以下の図にまとめましたーヽ(*ﾟдﾟ)ノ
 
+//image[grok03][IPアドレスをGrokするイメージ図#03][scale=0.5]{
+  Grokパワポ
+//}
 
+=== response & bytes
 
-** method: GET
-** path: /test.html
-** httpversion: 1.0
+ここまできたらあと少し！
+responseは、ステータスコードなので、NUMBERを使用します。
+また、bytesも同様にNUMBERを使用しますが、オブジェクトが送れなかった場合は、"-"のため、|で"-"を追加します。
 
+これで全て整ったので、Grok Constructorでテストしたいと思います。
 
-APACHE_COMMONLOG
-%{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+== Grok Constructorで全体テスト
+以下のGrokPatternでテストをしたいと思います。
+
+=== 完成したGrokPattern
+
+* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+
+== Logstashのconfファイルの作成
+
+やっとここでLogstashのconfファイルが登場しますw
+長かったですねw
+てことで、confファイルを作成したいと思いますー
+
+今までは、INPUTとOUTPUTのみでしたが、先ほど作成したGrokPatternを埋め込みたいので、FILTERを追加します。
+そこにGrokPatternを直接、Logstashのconfファイルにコーディングするのも可能ですが、可読性を意識したいため、GrokPatternのファイルを外出しします。
+
+外出しするため、以下の作業を実施します。
+
+//cmd{
+### GrokPatternファイルを配置するためのディレクトリを作成
+$ mkdir patterns
+### httpd用のGrokPatternファイルを作成
+### GrokPattern名をHTTPD_COMMONLOGとします
+$ vim patterns/httpd_Patterns
+HTTPD_COMMONLOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+}
+
+次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。
+
+//cmd{
+$ vim conf.d/test03.conf
+input {
+  file {
+    path => "/etc/logstash/log/httpd_access.log"
+    start_position => "beginning"
+  }
+}
+filter {
+  grok {
+    patterns_dir => ["/etc/logstash/patterns/httpd_patterns"]
+    match => { "message" => "%{HTTPD_COMMONLOG}" }
+  }
+output {
+  stdout { codec => rubydebug }
+}
+}
+
+それでは、実行してみますー
+
+//cmd{
+
+}
