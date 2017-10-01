@@ -59,7 +59,7 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** response: 200
 ** bytes: 2326
 
-== Grok Filterやってみよう
+== GrokPattern
 
 Grokは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
 Grokは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
@@ -69,7 +69,10 @@ Grokは、GrokPatternという形であらかじめ正規表現のパターン�
 (GrokPattern)[https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns]
 
 それでは、ここからはフィールド一つ一つを見ていってGrokPatternを作成していきたいと思います。
-そもそものGrokFilterの書き方とかはひとまず置いておきます！
+GrokPatternを作成していくには、ログの左から順に攻略していくのが重要です。
+ということを念頭において進めていきたいと思います。
+
+ちなみにですが、そもそものGrokFilterの書き方とかはひとまず置いておきます！
 後ほど、その辺は詳しく書きます。
 
 === ClientIP
@@ -105,18 +108,77 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 これらを図にすると以下です。
 
-//image[grok01][IPアドレスをGrokするイメージ図][scale=0.5]{
-  KibanaのDashboardを挿入
+//image[grok01][IPアドレスをGrokするイメージ図#01][scale=0.5]{
+  Grokパワポ
 //}
 
 それでは、実際にGrokがマッチされるかをGrok Constructorを使って確認してみたいと思います。
 
 == Grok Constructor
 (Grok Constructor)[http://grokconstructor.appspot.com/do/match]は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
-この他にも(GrokDebugger)[https://grokdebug.herokuapp.com/]やKibanaで提供しているGrokDebuggerなどがあります。
+この他にも(GrokDebugger)[https://grokdebug.herokuapp.com/]やKibanaのDevToolで提供しているGrokDebuggerなどがあります。
 
 Grok Constructorの使い方を以下の図に記載します。
 
-//image[grok_constructor01][Grok Constructorについて][scale=0.5]{
-  KibanaのDashboardを挿入
+//image[grok_constructor01][Grok Constructorでテスト#01][scale=0.5]{
+  Grokパワポ
 //}
+
+それでは、早速先ほど作成したGrokPatternがうまい具合にマッチするか試したいと思います。
+
+//image[grok_constructor02][Grok Constructorでテスト#02][scale=0.5]{
+  Grokパワポ
+//}
+
+想定通り、clientipというフィールドに "5.10.83.30"というIPアドレスがマッチしたことがわかります。
+この調子で、他のフィールドに対しても定義していきたいと思います！
+
+=== ident
+ユーザ名が付与入ってくるのと"-"がマッチできるものをGrokPatternで見ていくと、USERというGrokPatternがあるのでこちらを使用します。
+
+* %{USER:ident}
+
+先ほどの様に、上記のGrokPatternでGrok Constructorでテストを実施するとIPアドレスが引っかかると思います。
+なので、%{IPORHOST:clientip}を含んでテストを実施してみてください。
+
+//image[grok_constructor03][Grok Constructorでテスト#03][scale=0.5]{
+  Grokパワポ
+//}
+
+=== auth
+authもUserと同様の定義で良いので、GrokPatternのUSERを使用します。
+また、identとauthの間もスペースがあるので\sもしくはスペースを入力する必要があります。
+ ※図の記載では\sを¥sで記載してますm(_ _)m
+
+=== date
+
+次は、時刻ですね！
+時刻のフォーマットは、"[day/month/year:hour:minute:second zone]"です。
+これに当てはまるGrokPatternを探していたいと思いますー
+
+結果、以下のGrokPatternが当てはまることがわかります。
+
+* HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
+
+なので、こちらを使用してGrok Constructorでテストしてみたいと思います。
+先ほど作成したGrok Constructorに連ねてきましょー
+
+//image[grok_constructor04][Grok Constructorでテスト#04][scale=0.5]{
+  Grokパワポ
+//}
+
+あれ？"NOT MATCHED"ですね。。
+そうなんですね。じつは、%{HTTPDATE}に該当しない[]があるのです。
+なので、以下の図で示している通り、[]を無効にしてあげる必要があります。
+無効するためにエスケープ\（バックスラッシュ）を使用します。
+
+//image[grok02][IPアドレスをGrokするイメージ図#02][scale=0.5]{
+  Grokパワポ
+//}
+
+
+
+
+
+APACHE_COMMONLOG
+%{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:dete}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
