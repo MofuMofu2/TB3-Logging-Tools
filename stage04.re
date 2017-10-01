@@ -1,4 +1,5 @@
-= ログを取り込むまでのステップ
+= アクセスログをいい感じに取り込んでみよう
+== ログを取り込むまでのステップ
 ログをよしなに取り込むにはFILTERでログフォーマットに合わせて定義をする必要があります。
 なので、この章ではどのようにログを取り込むかをステップを踏んで解説していきたいと思います。
 
@@ -57,3 +58,59 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** httpversion: 1.0
 ** response: 200
 ** bytes: 2326
+
+== Grok Filterやってみよう
+
+Grokは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
+Grokは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
+ただ、GrokPatternにないものは自分で作成する必要がありますー
+そこも含めて解説できればと思いますm(_ _)m
+
+(GrokPattern)[https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns]
+
+それでは、ここからはフィールド一つ一つを見ていってGrokPatternを作成していきたいと思います。
+そもそものGrokFilterの書き方とかはひとまず置いておきます！
+後ほど、その辺は詳しく書きます。
+
+=== ClientIP
+ClientIPといことで、IPアドレスにマッチさせる必要があります。
+まずは、IPアドレスにマッチさせるためのGrokPatternがすでにないかを先ほどのGrokPatternのサイトから確認します。
+
+・・・あるではないか！（茶番劇っぽくてすまそんです）
+
+
+* IPORHOST (?:%{HOSTNAME}|%{IP})
+
+IPORHOST内に%{HOSTNAME}と%{IP}で構成されており、別に%{HOSTNAME}と%{IP}がGrokPatternとして定義されているので、それらを読み込む様になってます。
+また、先ほどGrokPatternサイトで調べてみると...ありますね！
+
+
+* HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)
+* IP (?:%{IPV6}|%{IPV4})
+
+HOSTNAMEに正規表現が記載されていることがわりますね。
+また、IPは、IPv6とIPv4に対応できるように構成されてます。
+これも同じ様にサイトをみると正規表現で記載されていることがわかると思います。
+
+IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、(?:)と|（パイプ）はなんぞや？と思った人もいると思いますが、
+この(?:)は、文字列をマッチさせたい&&キャプチャさせたくない場合に使います（キャプチャは使用しないので説明しません）
+今回でいう文字列は、%{HOSTNAME}と%{IP}に該当する文字列を指します。
+また、|は、どちからが一致したらを意味します。
+
+結果、IPORHOSTは、HOSTNAMEかつ、IPに該当するものをマッチさせます。
+
+上記を踏まえてGrokPatternを記載すると以下な感じになります。
+
+* %{IPORHOST:clientip}
+
+これらを図にすると以下です。
+
+//image[grok01][IPアドレスをGrokするイメージ図][scale=0.5]{
+  KibanaのDashboardを挿入
+//}
+
+それでは、実際にGrokがマッチされるかをGrok Constructorを使って確認してみたいと思います。
+
+== Grok Constructor
+(Grok Constructor)[http://grokconstructor.appspot.com/do/match]は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
+この他にも(GrokDebugger)[https://grokdebug.herokuapp.com/]やKibanaで提供しているGrokDebuggerなどがあります。
