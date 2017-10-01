@@ -1,21 +1,17 @@
 
 = Logstashに触れてみる
-
 == 環境について
-
 Logstash6.0betaがすでにインストールされていることを前提とします。
 インストール方法については、りまりま団のもふもふ（Twitter:@froakie0021）に記載してあるので、そちらを参考にして頂ければと思います！
 （決してサボってるわけじゃないですよwページの有効活用）
 
 == 動かす前のLogstash準備
-
 早速ですが、Logstashを動かしたいと思います！
 
 Logstashを動かすには、confファイルという設定ファイルを読み込ませる必要があります。
 このconfファイルにINPUT・FILTER・OUTPUTの定義することで、Logstashが実行します。
 
 === Logstashのディレクトリ構造
-
 Logstashの一部のディレクトリ構造について記載してますー
 ※RPMでLogstashをインストールしてます
 
@@ -26,7 +22,17 @@ Logstashの一部のディレクトリ構造について記載してますー
 ├ logstash.yml (Logstashの設定ファイル)
 └ startup.options (Logstash起動設定)
 
+=== confファイルの配置場所について
+logstashがconf.dを読み込みにいくのは、logstash.ymlの64行目に記載してあるためです。
+設定内容をみてわかるとおり、*.confとなっているため、先ほど作成したtest01も.confとしているのです。
 
+//cmd{
+$ vim logstash.yml
+64 path.config: /etc/logstash/conf.d/*.conf
+//}
+
+
+=== confファイルの準備
 Logstashを動かす前に簡単なconfファイルを作成します。
 confファイルの名前は、test01.confとします。
 また、カレントディレクトリは/etc/logstash/です。
@@ -42,19 +48,8 @@ output {
 }
 //}
 
-=== confファイルの配置場所について
-
-logstashがconf.dを読み込みにいくのは、logstash.ymlの64行目に記載してあるためです。
-設定内容をみてわかるとおり、*.confとなっているため、先ほど作成したtest01も.confとしているのです。
-
-//cmd{
-$ vim logstash.yml
-64 path.config: /etc/logstash/conf.d/*.conf
-//}
-
 
 == 動かすよ！Logstash
-
 logstashの起動スクリプトは以下に配置されてます。
 
 * Logstash起動スクリプト
