@@ -327,7 +327,7 @@ output {
 
 各々のフィルターについて図と合わせて説明します。
 
-//image[grok03][confファイルのFilterについて][scale=0.5]{
+//image[grok04][Logstash.confのイメージ#01][scale=0.5]{
   Grokパワポ
 //}
 
