@@ -242,9 +242,9 @@ responseは、ステータスコードなので、NUMBERを使用します。
 ### GrokPatternファイルを配置するためのディレクトリを作成
 $ mkdir patterns
 ### httpd用のGrokPatternファイルを作成
-### GrokPattern名をHTTPD_COMMONLOGとします
+### GrokPattern名をHTTPD_COMMON_LOGとします
 $ vim patterns/httpd_Patterns
-HTTPD_COMMONLOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 }
 
 次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。
@@ -260,7 +260,7 @@ input {
 filter {
   grok {
     patterns_dir => ["/etc/logstash/patterns/httpd_patterns"]
-    match => { "message" => "%{HTTPD_COMMONLOG}" }
+    match => { "message" => "%{HTTPD_COMMON_LOG}" }
   }
 output {
   stdout { codec => rubydebug }
@@ -306,7 +306,8 @@ input {
 }
 filter {
   grok {
-    match => { "message" => "%{HTTPD_COMMONLOG}" }
+    patterns_dir => ["/etc/logstash/patterns/httpd_patterns"]
+    match => { "message" => "%{HTTPD_COMMON_LOG}" }
   }
   geoip {
     source => "clientip"
@@ -324,12 +325,22 @@ output {
   stdout { codec => rubydebug }
 }
 
-各々のフィルターについて図で説明します。
+各々のフィルターについて図と合わせて説明します。
 
 //image[grok03][confファイルのFilterについて][scale=0.5]{
   Grokパワポ
 //}
 
+1. ファイルの読み込み位置を指定するためで、Logstash起動前のログも対象としたいため、biginningとしてます
+　　※デフォルト値：end
+2. パターンファイルの読み込み
+3. messageフィールドに格納されてい値を”HTTPD_COMMON_LOG”でマッチングします
+4. パターンファイル内でIPアドレスをマッチングさせているclientipフィールドを対象にgeoipフィルタを利用し、地理情報を取得します
+5. Logstashは、ログデータを取り込んだ時間を@timestampに付与するので、dateフィルタを用いることで実際のログデータのタイムスタンプを付与することができます
+6. パターンファイル内のdateフィールドに対して定義したデートパターンとマッチする場合に値を書き換えます
+7. 日付の月がOctになっているため、localeを"en"に指定してます
+8. 変更を変えたいターゲットとして"@timestamp"を指定します
+9. 不要なフィールドをremove_fieldで指定し、削除します（容量を抑えるためと不必要な情報を与えないため）
 
 それでは、修正したconfファイルで再度実行すると以下の感じになります。
 地理情報やタイムスタンプや不要な情報が削除されていることがわかります。
