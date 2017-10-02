@@ -383,3 +383,12 @@ output {
 これでApacheログをGrokを利用して抽出できるようになりましたね？
 次は、いままで使ってきたGrokPatternなどを利用してAWSサービスのログを抽出したいと思います。
 それでは、次章でーヽ(*ﾟдﾟ)ノ
+
+== 補足
+
+Grok Constructorで、作成したGrokPatternをテストすることも可能です。
+以下の図にあるとおりにテストして頂ければと思います。
+
+//image[grok_constructor06][Grok Constructorでテスト#06][scale=0.5]{
+  Grokパワポ
+//}
