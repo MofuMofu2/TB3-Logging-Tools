@@ -41,7 +41,7 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 * %lは、アイデンティティ情報なので、"ident"(string)
 * %uは、認証なので、"auth"(string)
 * %tは、時刻なので"date"(date)
-* \"%r\"は、いくつかに分割したいので、メソッドは、"method"、パスは、"path"、んでHTTPバージョンは、"httpversion"(一式string)
+* \"%r\"は、いくつかに分割したいので、メソッドは、"verb"、パスは、"path"、んでHTTPバージョンは、"httpversion"(一式string)
 * %>sは、ステータスコードなので、"response"(long)
 * %bは、オブジェクトサイズなので、"bytes"(long)
 
@@ -54,7 +54,7 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** ident: -
 ** auth: -
 ** date: 10/Oct/2000:13:55:36 -0700
-** method: GET
+** verb: GET
 ** path: /test.html
 ** httpversion: 1.0
 ** response: 200
@@ -228,9 +228,13 @@ responseは、ステータスコードなので、NUMBERを使用します。
 == Grok Constructorで全体テスト
 以下のGrokPatternでテストをしたいと思います。
 
-=== 完成したGrokPattern
+* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 
-* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+//image[grok_constructor04][Grok Constructorでテスト#04][scale=0.5]{
+  Grokパワポ
+//}
+
+問題なくマッチしましたね！
 
 == Logstashのconfファイルの作成
 
@@ -249,7 +253,7 @@ $ mkdir patterns
 ### httpd用のGrokPatternファイルを作成
 ### GrokPattern名をHTTPD_COMMON_LOGとします
 $ vim patterns/httpd_Patterns
-HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:method} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 }
 
 次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。

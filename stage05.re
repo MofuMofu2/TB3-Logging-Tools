@@ -159,3 +159,9 @@ Apacheアクセスログで使用したGrokPatternの"DATA"を使用します。
 "GREEDYDATA"というGrokPatternもあるのですが、最長マッチになってしまうため、想定外のものとマッチしてしまうため、DATAを使用します。
 
 * (?:%{DATA:user_agent}|-)
+
+=== ssl_cipher & ssl_protocol
+SSL通信時に使用するフィールドで、使用していない場合は、"-"が付くため|を記載します。
+
+* (?:%{NOTSPACE:ssl_cipher}|-)
+* (?:%{NOTSPACE:ssl_protocol}|-)
