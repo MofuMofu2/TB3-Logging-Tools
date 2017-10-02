@@ -41,7 +41,7 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 * %hは、クライアントIPということで"clientip"(string)
 * %lは、アイデンティティ情報なので、"ident"(string)
 * %uは、認証なので、"auth"(string)
-* %tは、時刻なので"date"(string)
+* %tは、時刻なので"date"(date)
 * \"%r\"は、いくつかに分割したいので、メソッドは、"method"、パスは、"path"、んでHTTPバージョンは、"httpversion"(一式string)
 * %>sは、ステータスコードなので、"response"(long)
 * %bは、オブジェクトサイズなので、"bytes"(long)
@@ -62,7 +62,6 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** bytes: 2326
 
 === GrokPattern
-
 Grokは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
 Grokは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
 ただ、GrokPatternにないものは自分で作成する必要がありますー

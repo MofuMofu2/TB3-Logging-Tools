@@ -18,6 +18,7 @@ ELBのログフォーマットを調べたいと思います。
 もし設定されていない方は、公式ドキュメントを確認頂ければと思いますー
 
 公式ドキュメントにアクセスログのフォーマットが記載されています。
+(Classic Load Balancerアクセスログ)[http://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/classic/access-log-collection.html]
 
 うーん。。長い！
 ということで一つ一つ分解していきます。
@@ -38,3 +39,36 @@ ELBのログフォーマットを調べたいと思います。
 ** user_agent: リクエスト元のクライアントを特定する
 ** ssl_cipher: SSL暗号化(暗号化されていない場合は"-")
 ** ssl_protocol: SSLプロトコル(暗号化されていない場合は"-")
+
+
+=== フィールド定義
+ここからは、フィールド定義するよ！
+今回は、Apacheのアクセスログと違ってすでにフィールド名が公式として定義されているので、そのまま使用します。
+ただし、client:portのようなフィールドは、clientipとportやbackendも分割します。
+また、requestも分割します。
+
+なので、ここでは、フィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
+サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってますー
+
+* 2015-05-13T23:39:43.945958Z my-loadbalancer 192.168.131.39:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
+** timestamp: 2015-05-13T23:39:43.945958Z (date)
+** elb: my-loadbalancer (string)
+** client_ip: 192.168.131.39 (string)
+** client_port: 2817 (string)
+** backend_ip: 10.0.0.1 (string)
+** backend_port: 2817 (string)
+** request_processing_time: 0.000073 (float)
+** backend_processing_time: 0.001048 (float)
+** response_processing_time: 0.000057 (float)
+** elb_status_code: 200 (string)
+** backend_status_code: 200 (string)
+** received_bytes: 200 (long)
+** sent_bytes: 0 (long)
+** method: GET (string)
+** proto: http (string)
+** urihost: www.example.com:80 (string)
+** uripath: - (string)
+** httpversion: 1.1 (string)
+** user_agent: curl/7.38.0 (string)
+** ssl_cipher: - (string)
+** ssl_protocol: - (string)
