@@ -237,13 +237,12 @@ responseは、ステータスコードなので、NUMBERを使用します。
 問題なくマッチしましたね！
 
 == Logstashのconfファイルの作成
-
 やっとここでLogstashのconfファイルが登場しますw
 長かったですねw
 てことで、confファイルを作成したいと思いますー
 
 今までは、INPUTとOUTPUTのみでしたが、先ほど作成したGrokPatternを埋め込みたいので、FILTERを追加します。
-そこにGrokPatternを直接、Logstashのconfファイルにコーディングするのも可能ですが、可読性を意識したいため、GrokPatternのファイルを外出しします。
+そこにGrokPatternを直接、Logstashのconfファイルにコーディングするのも可能ですが、可読性を意識したいため、GrokPatternをファイルとして外出しします。
 
 外出しするため、以下の作業を実施します。
 
@@ -388,7 +387,7 @@ output {
 }
 
 
-これでGrokを利用してApacheログを抽出できるようになりましたね！
+これでGrokを利用してApacheアクセスログを抽出できるようになりましたね！
 ビジュアライズしたい場合などは、OUTPUTをElasticsearchにし、Kibanaでインデックスを参照することでビジュアライズが可能です。
 
 次は、いままで使ってきたGrokPatternなどを利用してAWSサービスのログを抽出したいと思います。
