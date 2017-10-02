@@ -118,13 +118,16 @@ $ bin/logstash -f /etc/logstash/conf.d/logstash.conf
 WARNING: Could not find logstash.yml which is typically located in $LS_HOME/config or /etc/logstash. You can specify the path using --path.settings. Continuing using the defaults
 Could not find log4j2 configuration at path //usr/share/logstash/config/log4j2.properties. Using default config which logs errors to the console
 The stdin plugin is now waiting for input:
-test ←入力
+test ←入力したもの
 2017-09-27T08:53:59.456Z 0.0.0.0 test ←出力結果
 //}
 
 
 ちなみに2の方法でLogstashの起動を行う場合、次の通りに実行します。
-ただし、OSによってサービス起動コマンドは異なります。
+ただし、OSによってサービス起動コマンドは異なります@<fn>{Logstash_start_command}。
+
+//footnote[Logstash_start_command][https://www.elastic.co/guide/en/logstash/6.0/running-logstash.html]
+
 
 //list[Logstash_service_start][Logstashの起動その2（Cent0S6の場合）]{
 initctl start logstash
