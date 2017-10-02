@@ -186,3 +186,9 @@ ALB版も合わせてGrokPatternを記載しますー
 //image[grok_constructor08][Grok Constructorでテスト#08][scale=0.5]{
   Grokパワポ
 //}
+
+== Logstashのconfファイルの作成
+ここからconfファイルの作成ですが、Apacheのアクセスログと構造はほぼ一緒です。
+ただ、大きく違うのがINPUTがファイルパスではなく、S3からという点です。
+なので、S3をINPUTにした取り込み方法について解説していきたいと思います。
+FILTERとOUTPUTに関しては、最終的なconfファイルを記載するかたちとしますー
