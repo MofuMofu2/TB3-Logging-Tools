@@ -72,7 +72,7 @@ ELBのログフォーマットを調べたいと思います。
 ** backend_status_code: 200 (string)
 ** received_bytes: 200 (long)
 ** sent_bytes: 0 (long)
-** method: GET (string)
+** verb: GET (string)
 ** proto: http (string)
 ** urihost: www.example.com:80 (string)
 ** uripath: - (string)
@@ -84,4 +84,78 @@ ELBのログフォーマットを調べたいと思います。
 
 こん感じにマッピングされるようにGrokPatternを作成していきたいと思いますー
 
-==
+== GrokPatternをつくるよ
+前の章でやったようにGrokPatternを作っていきましょう！
+実は、AWSのELBは、GrokPatternが用意されているのです。
+ただね。
+それを使う！だけじゃGrok芸人にはなれんのですよ！
+ちゃんと理解して、自由にry
+
+=== timestamp
+ELBの時刻形式は、ISO8601のフォーマットを利用しています。
+そのため、GrokPatternに存在するTIMESTAMP_ISO8601をそのまま使用できるため、こちらを使います。
+
+* %{TIMESTAMP_ISO8601:date}
+
+=== elb
+elbの名前ですね！
+コレはユーザが任意につける名前なので、GrokPatternの"NOTSPACE"を使用します。
+
+* %{NOTSPACE:elb}
+
+=== client_ip & client_port
+Apacheアクセスログと同様に"IPORHOST"を使用したくなりますが、コレはやりすぎです。
+なぜかというと"IPORHOST"は、IPだけでなくHOSTも含んでいるためです。
+今回のフィールドは、IPのみのため、"client_ip"はGrokPatternのIPとし、client_portは"INT"とします。
+
+* (?:%{IP:client_ip}:%{INT:client_port:int})
+
+=== backend_ip & backend_port
+上記のClient同様です！
+が、しかし。
+バックエンドから応答がない場合は、"-"となるため、|で"-"も記載します。
+
+* (?:%{IP:backend_ip}:%{INT:backend_port:int}|-)
+
+=== リクエストタイム3兄弟
+これらすべてGrokPatternの"NUMBER"を使用し、応答がなかったように|で"-1"も記載します。
+
+* (?:%{NUMBER:request_processing_time:double}|-1)
+* (?:%{NUMBER:backend_processing_time:double}|-1)
+* (?:%{NUMBER:response_processing_time:double}|-1)
+
+=== elb_status_code & backend_status_code
+Apacheのアクセスログと同様にステータスコードは、"NUMBER"を使用します。
+
+* (?:%{INT:elb_status_code}|-)
+* (?:%{INT:backend_status_code:int}|-)
+
+=== received_bytes & sent_bytes
+バイトも同様にNUMBERを使用します。
+
+* %{INT:received_bytes:int}
+* %{INT:sent_bytes:int}
+
+
+=== request
+requestの中に複数のフィールドが組み込まれてます。
+GrokPatternをみると"ELB_REQUEST_LINE"というのがあります。
+このGrokPatternは、"verb" "proto" "urihost" "uripath" "httpversion"を含んでます。
+そのため、"ELB_REQUEST_LINE"を呼び出すだけでマッチさせることができます。
+察しのいい方は気づいているかもですが、GrokPatternの中で更にGrokPatternを呼び出すことができます。
+
+* ELB_REQUEST_LINE (?:%{WORD:verb} %{ELB_URI:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})
+
+上記の"ELB_REQUEST_LINE"内で"ELB_URI"を呼び出しています。
+
+* ELB_URI %{URIPROTO:proto}://(?:%{USER}(?::[^@]*)?@)?(?:%{URIHOST:urihost})?(?:%{ELB_URIPATHPARAM})?
+
+更に、"ELB_URIPATHPARAM"というのを呼び出しているかたちになってます。
+
+* ELB_URIPATHPARAM %{URIPATH:path}(?:%{URIPARAM:params})?
+
+=== user_agent
+Apacheアクセスログで使用したGrokPatternの"DATA"を使用します。
+"GREEDYDATA"というGrokPatternもあるのですが、最長マッチになってしまうため、想定外のものとマッチしてしまうため、DATAを使用します。
+
+* (?:%{DATA:user_agent}|-)
