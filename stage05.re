@@ -165,3 +165,24 @@ SSL通信時に使用するフィールドで、使用していない場合は�
 
 * (?:%{NOTSPACE:ssl_cipher}|-)
 * (?:%{NOTSPACE:ssl_protocol}|-)
+
+=== Grok Constructorでテスト
+個々のテスト結果は省いてますが、慣れるまでは一つ一つクリアしていってください！
+あ！ちなみに、今回作成したGrokPattern名がELBではなくCLBなのは、Application Load Balancer（以下、ALB）と区別するためです。
+ALBとCLBでは、ログフォーマットが若干違うため、区別してます。
+ALB版も合わせてGrokPatternを記載しますー
+
+* CLB_ACCESS_LOG %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port:int}) (?:%{IP:backend_ip}:%{INT:backend_port:int}|-) (?:%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code:int}|-) %{INT:received_bytes:int} %{INT:sent_bytes:int} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-)
+* ALB_ACCESS_LOG %{NOTSPACE:type} %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port}) (?:%{IP:backend_ip}:%{INT:backend_port}|-) (:?%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code}|-) %{INT:received_bytes} %{INT:sent_bytes} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-) %{NOTSPACE:target_group_arn} \"%{NOTSPACE:trace_id}\"
+
+といことで、Grok Constructorの結果です！
+
+//image[grok_constructor07][Grok Constructorでテスト#07][scale=0.5]{
+  Grokパワポ
+//}
+
+ちなみに、ALBは、以下な感じですー
+
+//image[grok_constructor08][Grok Constructorでテスト#08][scale=0.5]{
+  Grokパワポ
+//}
