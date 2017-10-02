@@ -126,7 +126,7 @@ test ←入力したもの
 ちなみに2の方法でLogstashの起動を行う場合、次の通りに実行します。
 ただし、OSによってサービス起動コマンドは異なります@<fn>{Logstash_start_command}。
 
-//footnote[Logstash_start_command][https://www.elastic.co/guide/en/logstash/6.0/running-logstash.html]
+//footnote[Logstash_start_command][参考：https://www.elastic.co/guide/en/logstash/6.0/running-logstash.html]
 
 
 //list[Logstash_service_start][Logstashの起動その2（Cent0S6の場合）]{
