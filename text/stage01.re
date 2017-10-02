@@ -21,25 +21,17 @@
 
  = 環境について
 
-以下のAWSサービスを利用してログの可視化をしちゃいます。
-
-* Cloudfront
-* Elastic Load Balancing
-** Application Load Balancer
-** Classic Load Balancer
-** Cloudtrail
-* S3
-
-可視化するためのサーバ環境は以下の感じです。
-
 * OS
 ** Amazon Linux AMI 2017.03.1 (HVM)
 * ElasticStack
 ** Logstash 6.0(Beta)
-** Elasticsearch 6.0(Beta)
-** Kibana 6.0(Beta)
 * Tool
 ** Grok Constructor
+
+あれ？ストア先のElasticsearchは？
+ビジュアライズするためのKibanaは？と思った方もいるかと思いますが、本内容ではログのいい感じに構造化するまでをターゲットとしてます。
+なので、Losgstashで標準出力して、結果が想定通りかまでを確認できればと思います。
+構造化できてしまえば、あとはストアし、ビジュアライズするだけです！そこは、みなさんがよしなにやって頂ければと思いますm(_ _)m
 
 本の内容は公式ドキュメントや参考書籍などを元に動作確認を行ってはいますが、
 この本の情報を用いた開発・制作・運用に対して発生した全ての結果に対して責任は負うことはできません。
