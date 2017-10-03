@@ -41,6 +41,10 @@ Ciscoさんは丁寧にログフォーマットを掲載してます。
 このログフォーマットは以下のようになっています。
 
 * %ASA-6-606001: ASDM session number number from IP_address started
+* %ASA-6-606002: ASDM session number number from IP_address ended
+
+ASDMのセッションを開始した時と終了した時に出力するログです。
+ASDMはWebベースの管理インターフェースを提供するツールです。
 
 === フィールド定義していくよ！
 ではでは、フィールド定義ですが、左から順にやっていきます。
@@ -60,11 +64,12 @@ Ciscoさんは丁寧にログフォーマットを掲載してます。
 そのため、フィールド名に"ASDM session number"とし、値としては取り込まないようにしています。
 その他の"from"も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、src_ip（ソースIP）というフィールドにIPアドレスを値として取り込んでいます。
 
+次のログですが、最後の"ended"しか変わらないということがわかります。
+なので、先ほどのフィールド定義を使用します。
 
+* Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
 
-
-
-
+=== GrokPatternをつくるよ
 
 
 
