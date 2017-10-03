@@ -192,3 +192,25 @@ ALB版も合わせてGrokPatternを記載しますー
 ただ、大きく違うのがINPUTがファイルパスではなく、S3からという点です。
 なので、S3をINPUTにした取り込み方法について解説していきたいと思います。
 FILTERとOUTPUTに関しては、最終的なconfファイルを記載するかたちとしますー
+
+
+
+input {
+  s3 {
+   bucket => "wp-cdn-buckets"
+   region => "ap-northeast-1"
+   interval => "10"
+   sincedb_path => "/etc/logstash/sincedb"
+  }
+}
+
+/usr/share/logstash/bin/logstash-plugin install logstash-input-s3
+Validating logstash-input-s3
+Installing logstash-input-s3
+Installation successful
+
+
+AWS Access Key ID [None]:
+AWS Secret Access Key [None]:
+Default region name [None]: ap-northeast-1
+Default output format [None]: json
