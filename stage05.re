@@ -200,6 +200,7 @@ Logstashのconfファイル作成して実行して動いたら勝ちパター�
 Apacheの時と同様に作成してみたのが以下です！
 
 //cmd{
+$ vim conf.d/asa.conf
 input {
   file {
   	path => "/Users/micci/project/logstash-5.5.2/asa.log"
@@ -208,24 +209,52 @@ input {
 }
 filter {
   grok {
-    patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/asa_patterns"]
-    match => { "message" => "%{CISCOTIMESTAMP:date}%{HOSTNAME}%{EVENTID}" }
-  }
-  grok {
   	patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/asa_patterns"]
-  	match => { "message" => "%{CISCOFW606001}" }
+  	match => { "message" => "%{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}" }
   }
   date {
     match => ["date", "MMM dd HH:mm:ss", "MMM  d HH:mm:ss" ]
   }
   mutate {
-    remove_field => ["date", "message"]
+    remove_field => ["date", "message", "path", "host"]
   }
 }
 output {
   stdout { codec => rubydebug }
 }
 }
+
+実行結果を以下に記載しますー
+
+//cmd{
+### EventID: 606001
+{
+                 "src_ip" => "192.168.1.254",
+               "hostname" => "ASA-01",
+             "@timestamp" => 2017-06-20T02:21:34.000Z,
+                "session" => "started",
+               "@version" => "1",
+    "ASDM-session-number" => " 0",
+                "EventID" => "ASA-6-606001"
+}
+### EventID: 606002
+{
+                 "src_ip" => "192.168.1.254",
+               "hostname" => "ASA-01",
+             "@timestamp" => 2017-06-20T02:21:34.000Z,
+                "session" => "ended",
+               "@version" => "1",
+    "ASDM-session-number" => " 0",
+                "EventID" => "ASA-6-606001"
+}
+}
+
+想定通りにログを抽出できましたね！
+GrokPatternにあるものは積極的に使用し、ないものはCustomPatternで作る！といったことを学習できたのではないでしょうか。
+CiscoのASAを今回取り上げましたが、まだまだGrokするログはあります。
+なので、更にGrokに慣れるためにも色々とトライして見てください！
+
+それでは本章はこれでおわりですー
 
 
 
