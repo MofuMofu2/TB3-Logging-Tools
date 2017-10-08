@@ -54,21 +54,55 @@ fluentdがどのデータを読み取るのかをこのディレクティブで�
 @<code>{tag}は取得したデータに付与するデータの名称を設定します。このtagを用いて
 データの送信先の振り分けなどを行うことができます。こちらも必須設定です。
 
-=== データの加工部（filter）
-読み取ったデータをどのように加工するのか指定するプラグインです。ただし、@<code>{filter}ディレクティブの中では
-tagの変更ができないため、加工後のデータに新しくtagを付与したい場合は@<code>{match}ディレクティブで専用プラグインを使用します。
-
-//list[fluentd_filter][filter部分の実装例]{
-//}
-
-
 === データの送付部（match）
 処理が終わったデータをどこに送付するか指定するディレクティブです。
-プラグインを複数記述すれば、複数の出力先へデータを送付することが可能です。
+プラグインを複数記述すれば、複数の出力先へデータを送付可能です。
 
-@<list>{fluentd_match}
+//list[fluentd_match][match部分の実装例]{
+<match>
+  @type file
+  path /var/log/csv/test.csv
+  format csv
+  fields Full Name,Country,Created At,Id,Email
+</match>
+//}
 
-=== その他特徴など
+@<code>{type}は使用するプラグイン名です。取得したデータをcsvファイルにして出力したいので
+@<code>{file}プラグインを指定しています。出力形式は@<code>{format}で指定します。
+
+@<code>{path}はファイルの出力先を指定します。例では@<code>{/var/log/csv}に@<code>{test.csv}
+ファイルを出力する設定となっています。
+
+@<code>{format}をcsvにした場合、@<code>{fields}を設定する必要があります。
+ここに設定した文字列がcsvの列となります。
+
+=== コンフィグ例と出力結果
+今回の実装例である、「jsonファイルを取得し、csvに加工する」ためfluentdのコンフィグと
+出力例を記載します。入力データは@<list>{test_json}を使用しています。
+
+//list[fluentd_example][fluentdのコンフィグ例まとめ]{
+<match>
+  @type file
+  path /var/log/csv/test.csv
+  format csv
+  fields Full Name,Country,Created At,Id,Email
+  buffer_path /var/log/csv/test.csv.*
+</match>
+<source>
+  @type tail
+  path /var/log/json/*.json
+  pos_file /var/log/td-agent/tmp/json.log.pos
+  format json
+  tag json
+</source>
+//}
+
+//list[fluentd_output][test.csvの出力例（fluentd）]{
+"Sheldon Tillman","Peru","1980-11-13T17:37:36.702Z","0","Carolanne_Kub@emmalee.name"
+//}
+
+@<code>{""}を出力データから外したい場合、@<code>{<match>}部分に@<code>{force_quotes false}の設定を追加します。
+
 
 == Logstash
 
@@ -169,7 +203,7 @@ output{
 
 入力データは@<list>{test_json}を参照してください。
 
-//list[Logstash_output][test.csvの出力例]{
+//list[Logstash_output][test.csvの出力例（Logstash）]{
 Sheldon Tillman,Peru,1980-11-13T17:37:36.702Z,0,Carolanne_Kub@emmalee.name
 //}
 
