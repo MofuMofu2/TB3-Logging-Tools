@@ -4,7 +4,7 @@
 なので、この章ではどのようにログを取り込むかをステップを踏んで解説していきたいと思います。
 
 <ログ取り込みフロー>
-1. 取り込むログフォーマットを調べる
+1. ログフォーマットを調べる
 2. フィールド定義
 3. GrokPatternをつくる
 4. Grok Constructorでテスト
@@ -251,7 +251,7 @@ responseは、ステータスコードなので、NUMBERを使用します。
 $ mkdir patterns
 ### httpd用のGrokPatternファイルを作成
 ### GrokPattern名をHTTPD_COMMON_LOGとします
-$ vim patterns/httpd_Patterns
+$ vim patterns/httpd_patterns
 HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 }
 
