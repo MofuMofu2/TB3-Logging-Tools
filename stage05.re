@@ -120,6 +120,10 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 なので、隣の"(?<ASDM-session-number>\s[0-9]+)"CustomPatternで取得した値が"ASDM-session-number"というフィールに入るかたちです。
 正規表現部分は、"\s"のスペースと"[0-9]"の数字複数並んでも対応できるように"+"を使用しているかたちです。
 
+最終的に先頭の":"とスペースも含むので以下な感じになりますー
+
+* :\sASDM session number(?<ASDM-session-number>\s[0-9]+)
+
 === ソースIPアドレス
 これはApacheのアクセスログでやったことと一緒ですね。
 まぁ、IPアドレスのGrokPatternのように他にも確立されているものは積極的に使っていきましょう。
@@ -151,9 +155,13 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 これで整ったので、GrokConstructorでテストをしてみたいと思います。
 
 == Grok Constructorで全体テスト
+最終形は以下です。
 
+* %{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}\s: %(?<EventID>ASA-\d{1}-\d{6}):\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
 
-
+//image[grok04][ASA Grok結果#03][scale=0.5]{
+  Grokパワポ
+//}
 
 
 
