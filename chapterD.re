@@ -4,9 +4,8 @@ fluentdとLogstashのコンフィグ形式は、かなり違いがあります�
 なお、今回はjsonデータをcsvに加工・出力する、という事例に沿ってコンフィグを記載しています。
 
 
-テストデータは@<href>{http://www.databasetestdata.com/}で生成しました。
-json,csv,xmlファイルにテストデータを入れた状態で生成できるサイトです。
-こちらで生成したデータを参考に、jsonファイルを作成しました。
+ちなみに、jsonファイルは@<href>{http://www.databasetestdata.com/}を利用して作成しました。
+json,csv,xmlから拡張子を選択しデータの中身を項目を指定すれば、自動でテストデータが生成されます。
 
 //list[test_json][今回使用したjsonファイル]{
 {"Full Name": "Sheldon Tillman","Country": "Peru","Created At": "1980-11-13T17:37:36.702Z","Id": 0,"Email": "Carolanne_Kub@emmalee.name"}
@@ -20,44 +19,96 @@ json,csv,xmlファイルにテストデータを入れた状態で生成でき�
 fluentdのコンフィグ（td-agentを用いてインストールした場合は@<code>{td-agnet.conf}）の構造は、次のようになっています。
 また、コンフィグは@<code>{/etc/td-agent/td-agnet.conf}にデフォルトで配置されているので、こちらを編集していきます。
 
-//image[fluentd_config][fluentdのコンフィグ構造][scale=0.3]{
-//}
 
-ただし、処理の順序は@<code>{source}→@<code>{filter}→@<code>{match}となっています。
+ただし、fluentdは@<code>{source}→@<code>{filter}→@<code>{match}の順に処理を行います。
+コンフィグの記述位置と処理の順序は関係ありません。
 
 === データの読み取り部（source）
 fluentdがどのデータを読み取るのかをこのディレクティブで指定します。データの入力元は複数指定することが可能です。
-@<code>{<source>}と@<code>{</source>}の間に使用したいプラグインを指定していきます。
-この書式は他のディレクティブでも同様です。
-
+@<code>{<source>}と@<code>{</source>}の間に設定を記述します。この書式は他のディレクティブでも同様です。
 
 //list[fluentd_source][source部分の実装例]{
+<source>
+  @type tail
+  path /var/log/json/*.json
+  pos_file /var/log/td-agent/tmp/json.log.pos
+  format json
+  tag json
+</source>
 //}
 
-=== データの加工部（filter）
-読み取ったデータをどのように加工するのか指定するプラグインです。ただし、@<code>{filter}ディレクティブの中では
-tagの変更ができないため、加工後のデータに新しくtagを付与したい場合は@<code>{match}ディレクティブで専用プラグインを使用します。
+@<code>{@type}は使用するプラグイン名です。今回はサーバー内のjsonファイルを取得することが目的ですので、
+@<code>{tail}プラグインを選択しました。@<code>{tail}プラグインは、Linuxコマンドに例えると@<code>{tail -F}と同じような働きをします@<fn>{fluentd_tail}。
+具体的には指定したファイルを監視し、ファイルが更新されるとfluentdがデータを取得する、という動きをします。
 
-//list[fluentd_filter][filter部分の実装例]{
-//}
+//footnote[fluentd_tail][https://docs.fluentd.org/v0.12/articles/in_tail]
 
+@<code>{path}はどのファイルを取得対象とするか設定する箇所です。実装例では@<code>{/var/log/json}に存在するjsonファイルを全て取得する設定になっています。
+（当たり前かもしれませんが）@<code>{path}は必須設定です。
+
+@<code>{pos_file}はファイルをどこまで読み取ったか記録しておく@<code>{.pos}ファイルを
+どこに配置するのか設定しています。@<code>{path}と違って任意設定ですが、設定することを推奨されています。
+
+@<code>{format}は指定した形式にデータを整形します。こちらは必須設定です。
+
+@<code>{tag}は取得したデータに付与するデータの名称を設定します。このtagを用いて
+データの送信先の振り分けなどを行うことができます。こちらも必須設定です。
 
 === データの送付部（match）
 処理が終わったデータをどこに送付するか指定するディレクティブです。
-プラグインを複数記述すれば、複数の出力先へデータを送付することが可能です。
+プラグインを複数記述すれば、複数の出力先へデータを送付可能です。
 
-@<list>{fluentd_match}
+//list[fluentd_match][match部分の実装例]{
+<match>
+  @type file
+  path /var/log/csv/test.csv
+  format csv
+  fields Full Name,Country,Created At,Id,Email
+</match>
+//}
 
-=== その他特徴など
+@<code>{type}は使用するプラグイン名です。取得したデータをcsvファイルにして出力したいので
+@<code>{file}プラグインを指定しています。出力形式は@<code>{format}で指定します。
+
+@<code>{path}はファイルの出力先を指定します。例では@<code>{/var/log/csv}に@<code>{test.csv}
+ファイルを出力する設定となっています。
+
+@<code>{format}をcsvにした場合、@<code>{fields}を設定する必要があります。
+ここに設定した文字列がcsvの列となります。
+
+=== コンフィグ例と出力結果
+今回の実装例である、「jsonファイルを取得し、csvに加工する」ためfluentdのコンフィグと
+出力例を記載します。入力データは@<list>{test_json}を使用しています。
+
+//list[fluentd_example][fluentdのコンフィグ例まとめ]{
+<match>
+  @type file
+  path /var/log/csv/test.csv
+  format csv
+  fields Full Name,Country,Created At,Id,Email
+  buffer_path /var/log/csv/test.csv.*
+</match>
+<source>
+  @type tail
+  path /var/log/json/*.json
+  pos_file /var/log/td-agent/tmp/json.log.pos
+  format json
+  tag json
+</source>
+//}
+
+//list[fluentd_output][test.csvの出力例（fluentd）]{
+"Sheldon Tillman","Peru","1980-11-13T17:37:36.702Z","0","Carolanne_Kub@emmalee.name"
+//}
+
+@<code>{""}を出力データから外したい場合、@<code>{<match>}部分に@<code>{force_quotes false}の設定を追加します。
+
 
 == Logstash
 
 === コンフィグの構造
 対するLogstashのコンフィグ（@<code>{logstash.conf}）の構造は、次のようになっています。
 また、コンフィグは@<code>{/etc/logstash/conf.d}配下に置きます。名称の最後を@<code>{.conf}にして配置します。
-
-//image[Logstash_config][Logstashのコンフィグ構造][scale=0.3]{
-//}
 
 特徴として、コンフィグにはデータ処理の内容しか記載しないこと・各データに対するタグ付けが任意であることが挙げられます。
 Logstash自体のソフトウェアに関する動作設定は、全て@<code>{/etc}配下にある設定ファイル（@<code>{logstash.yml}）で行います。
@@ -152,7 +203,7 @@ output{
 
 入力データは@<list>{test_json}を参照してください。
 
-//list[Logstash_output][test.csvの出力例]{
+//list[Logstash_output][test.csvの出力例（Logstash）]{
 Sheldon Tillman,Peru,1980-11-13T17:37:36.702Z,0,Carolanne_Kub@emmalee.name
 //}
 
