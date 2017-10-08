@@ -22,6 +22,7 @@ Grokを制することで楽しいロギング生活を送ることが可能に�
 
 * OS
 ** Amazon Linux AMI 2017.03.1 (HVM)
+** InstanceType: t2.small
 ** Logstash 6.0(Beta)
 
 本の内容は公式ドキュメントや参考書籍などを元に動作確認を行ってはいますが、
