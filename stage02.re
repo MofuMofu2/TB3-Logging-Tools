@@ -23,7 +23,6 @@
 
 
 == Logstash
-
 Logstashは、Elasticsearch社が提供するオープンソースログ収集管理ツールです。
 様々なログをを同時に取り込み、変換し、取り込みます。
 取り込み先としては、同社のElasticsearchと組み合わせることでニアリアルタイムにログを取り込むことができます。
@@ -34,21 +33,20 @@ LogstashのINPUTS・FILTERS・OUTPUTSの3層構造を以下の図で表すこと
   Logstashの構造の図を追加
 //}
 
-=== INPUTS
 
+=== INPUTS
 データソースは、様々なデータ形式で多数のシステムに分散されてます。
 Logstashを利用することで多様なInput形式に対応することができます。
 ログや、メトリクス、Webアプリケーション、データストア、様々なクラウドサービスからのデータ投入を可能とします。
 
-=== FILTERS
 
+=== FILTERS
 INPUTしたデータソースをLogstashのFilterで解析し、フィールドを識別し、構造化します。
 データソースの変換には、"Grok Filter"やIPアドレスから地理情報を得るための"Geoip Filter"など様々な（フィルタライブラリ:@<href>{https://www.elastic.co/guide/en/logstash/current/filter-plugins.html}）が用意されてます。
 くどいですが、このGrok Filterにフォーカスするします！
 
 
 === OUTPUTS
-
 データを構造化したのち、Elasticsearchなどに出力します。
 Elasticsearch以外にも出力先にすることが可能なため、環境に合わせた使い方ができます。
 
