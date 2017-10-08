@@ -155,17 +155,77 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 これで整ったので、GrokConstructorでテストをしてみたいと思います。
 
 == Grok Constructorで全体テスト
-最終形は以下です。
+パターンファイルを抽出し、テストを実施します。
 
-* %{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}\s: %(?<EventID>ASA-\d{1}-\d{6}):\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+* パターンファイル
+*+ CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
+*+ EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
+*+ CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+
+* Grok
+** %{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}
+
+実行結果は以下です！
 
 //image[grok04][ASA Grok結果#03][scale=0.5]{
   Grokパワポ
 //}
 
+== Logstashのconfファイルの作成
+ここまできましたね！
+ここまできたら後少し！ということでApacheのアクセスログの時と同様に作成していきたいと思いますー
 
+今回もパターンファイルに外出ししたいと思います！
 
+=== パターンファイル
+タイムスタンプやらホスト名、イベントIDそしてイベントメッセージのGrokPatternをパターンファイルに定義します。
+"CISCOFW606001"に"606002"も含んでいるのですが、文字数が長くなるのが個人的に嫌なため"606001"に集約してます。
+なので、含んでいることがわかりにくいと思う方は変更しても問題ないです！
 
+//cmd{
+$ vim patterns/asa_patterns
+CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
+EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
+CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+}
+
+これでパターンファイルの準備は完了です。
+
+パターンファイルの
+
+=== Logstash Conf
+最後きたよ！
+Logstashのconfファイル作成して実行して動いたら勝ちパターンだよ！
+
+Apacheの時と同様に作成してみたのが以下です！
+
+//cmd{
+input {
+  file {
+  	path => "/Users/micci/project/logstash-5.5.2/asa.log"
+  	start_position => "beginning"
+  }
+}
+filter {
+  grok {
+    patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/asa_patterns"]
+    match => { "message" => "%{CISCOTIMESTAMP:date}%{HOSTNAME}%{EVENTID}" }
+  }
+  grok {
+  	patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/asa_patterns"]
+  	match => { "message" => "%{CISCOFW606001}" }
+  }
+  date {
+    match => ["date", "MMM dd HH:mm:ss", "MMM  d HH:mm:ss" ]
+  }
+  mutate {
+    remove_field => ["date", "message"]
+  }
+}
+output {
+  stdout { codec => rubydebug }
+}
+}
 
 
 
