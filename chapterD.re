@@ -1,16 +1,18 @@
 = 比較その2：コンフィグの形式
 fluentdとLogstashのコンフィグ形式は、かなり違いがあります。
 ここではデータの読み取り・加工・出力に分けて、コンフィグの比較をしてみたいと思います。
-なお、今回のコンフィグ例ではTwitterから取得したjsonデータをcsvに加工する、というユースケースを想定しています。
-Twitterから取得できるjsonの例をあげます@<fn>{example_twitter}。
+なお、今回はjsonデータをcsvに加工・出力する、という事例に沿ってコンフィグを記載しています。
 
-//footnote[example_twitter][これはもふもふのTweetをいくつか取得したものです。大したことはつぶやいていませんね。]
 
-//list[twitter_json][Twitterから取得したつぶやきデータの例]{
-  jsonを挿入
+テストデータは@<href>{http://www.databasetestdata.com/}で生成しました。
+json,csv,xmlファイルにテストデータを入れた状態で生成できるサイトです。
+こちらで生成したデータを参考に、jsonファイルを作成しました。
+
+//list[test_json][今回使用したjsonファイル]{
+{"Full Name": "Sheldon Tillman","Country": "Peru","Created At": "1980-11-13T17:37:36.702Z","Id": 0,"Email": "Carolanne_Kub@emmalee.name"}
 //}
 
-この章で扱う入力データの例は、全て@<list>{twitter_json}を使用しています。
+この章で扱う入力データの例は、全て@<list>{test_json}を使用しています。
 
 == fluentd
 
@@ -89,21 +91,19 @@ jsonファイルを全て取得する、という設定になっています。
 
 //footnote[filter_make][こういうの、がらがらぽんってできると楽だと思うんですけど世の中厳しい。]
 
-例えば、今回のようにjsonを取得しただけだと、データが@<code>{message}というfieldに全て入ってしまい扱いにくいものとなってしまいます。
-なので@<code>{json}プラグインを使用してjsonを分割します。
-
-//list[filter_notuse_json][jsonの出力例（filterを使用しなかった場合）]{
-//}
-
-//list[filter_use_json][jsonの出力例（filterを使用した場合）]{
-//}
-
-さらに、データを加工します。
+例えば、今回のようにjsonを取得した場合、@<code>{json}プラグインを使用してjsonを分割します。
 
 //list[filter_json_logstash][filterプラグインの実装例]{
-  jsonを加工するためのプラグインを記載
+  filter {
+    json {
+     source => "message"
+   }
+  }
 //}
 
+@<code>{json}はプラグイン名称です。オプション@<code>{source}はどのfield内のデータを加工するか指定する部分です。
+取得したデータはデフォルトだと@<code>{message}というfieldに入るので、@<code>{message}内のデータを加工する
+指定を行なっています。
 
 === データの送付部（output）
 処理が終わったデータをどこに送付するか指定するプラグインです。データの送付以外にも、別フォーマットへの加工が可能です。
@@ -111,20 +111,52 @@ jsonファイルを全て取得する、という設定になっています。
 また、複数の宛先にデータを送付したい場合、プラグインを複数記述することで実現可能です。
 
 //list[output_json_logstash][outputプラグインの実装例]{
-  jsonをcsv取得するためのプラグインを記載
+output{
+  csv {
+    fields => [
+      "Full Name", "Country", "Created At", "Id", "Email"
+    ]
+    path => "/var/log/csv/test.csv"
+  }
+}
 //}
 
-ちなみに、@<code>{stdout}プラグインを使用すると、加工後のデータを標準出力させることが可能です。
-serviceコマンドでプロセス起動を行うと、@<code>{logstash.stdout}という名称で標準出力内容が保存されます。
-動作確認時に使用すると便利です。
+@<code>{csv}はプラグイン名称です。このプラグインを使うと、データをcsvに変換できます。
+@<code>{fields}で指定した文字がcsvの列にあたります。列に一致するデータが見つからない場合、csvは空欄になります。
+@<code>{path}は生成したcsvの出力場所を指定します。日付方法をファイル名にすることも可能です。
 
-//list[logstash_stdout][stdoutプラグインの例]{
+
+=== コンフィグ例と出力結果
+今まで紹介した、Logstashのコンフィグと出力結果例を記載します。
+
+//list[Logstash_example][Logstashのコンフィグ例まとめ]{
+input {
+  file {
+  path => "/var/log/json/*.json"
+    }
+}
+filter {
+  json {
+   source => "message"
+ }
+}
+output{
+  csv {
+    fields => [
+      "Full Name", "Country", "Created At", "Id", "Email"
+    ]
+    path => "/var/log/csv/test.csv"
+  }
+}
 //}
 
-//cmd{
-標準出力後の動作を記述
+入力データは@<list>{test_json}を参照してください。
+
+//list[Logstash_output][test.csvの出力例]{
+Sheldon Tillman,Peru,1980-11-13T17:37:36.702Z,0,Carolanne_Kub@emmalee.name
 //}
 
+jsonデータがcsv形式に加工されていることがわかります。
 
 === その他特徴など
 ==== 複数のlogstash.confは両立できるが、注意が必要
@@ -163,7 +195,7 @@ fieldの数を意図的に操作する、というのは他のElastic製品@<fn>
 意識しているものと思われます。Elasticsearchでデータを検索するときや、Kibanaでグラフを描画するときは
 field単位でデータを引っ張ってくる感じになるので、意図的にfield数を操作できるようにしているような感じがします。
 
-#@# この辺ちょっと忘れたからあとで調べ直して修正すりーりえ
+
 
 //footnote[Elastic_Stack][Elastic社製のOSS群はElastic Stackといいます。でもElasticsearch,Logstash,KibanaでELKって言ってる人の方が多いですね。そっちの方が短いし。]
 
@@ -184,3 +216,8 @@ Logstashを運用する上でよく出てくるプラグインを紹介します
 指定した条件に一致するデータを変更できます。
 ただし、ある程度fieldを分割していないと狙った部分だけ変換、という処理がしにくいので
 前に紹介した@<code>{grok}filterをいかに活用し、データを分割できるかが勝負の分かれ目になります。
+
+==== stdout(output)
+動作確認時にも使用した@<code>{stdout}プラグインは、加工後のデータを標準出力させることが可能です。
+serviceコマンドでプロセス起動を行うと、@<code>{logstash.stdout}という名称で標準出力内容が保存されます。
+動作確認時に使用すると便利です。
