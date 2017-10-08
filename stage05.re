@@ -77,7 +77,7 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 === GrokPatternをつくるよ
 それでは、GrokPatternを作っていきます。
 
-* Jun 20 17:36:07 FITs-dc-pVP01 : %ASA-6-606001: ASDM session number 0 from 10.18.12.112 started
+* Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
 
 === 共通部分
 タイプスタンプとホスト名、イベントIDはすべてのログに入るメッセージのため、共通部分とします。
@@ -100,6 +100,30 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 ** それ以降（ここでいうASAから始まる正規表現）にフィールドに入れたい正規表現を記載します
 
 上記のように作成することで好きなGrokPatternを作成することができます。
+これをCustomPatternといいます。
+
+== 固有部分
+ここからはイベント毎に異なる固有部分のGrokPatternを作っていきます。
+共通部分を取り除いた部分の以下が対象ですね。
+
+* : ASDM session number 0 from 192.168.1.254 ended
+
+=== ASDM session number 0
+フィールド定義で記載した通りですが、ASDMセッションNo.をフィールドとし、値が取得できればよいわけです。
+なので、以下のようになります。
+
+* ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
+
+これも見てわかる通り、CustomPatternで作成しています。
+一つ一つみていくと(?)の外に"ASDM session nubber"がありますね。
+これは、"ASDM session number"をマッチしても値は取得しない場合に使うやり方です。
+なので、隣の"(?<ASDM-session-number>\s[0-9]+)"CustomPatternで取得した値が"ASDM-session-number"というフィールに入るかたちです。
+正規表現部分は、"\s"のスペースと"[0-9]"の数字複数並んでも対応できるように"+"を使用しているかたちです。
+
+
+
+
+
 
 
 
