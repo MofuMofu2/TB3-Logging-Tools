@@ -36,12 +36,109 @@ Logstashのドキュメントは実装例は少し記載があるものの、ど
 //footnote[Logstash_doc][あと、outputのcsvプラグイン、実装例が間違ってる気がする…。気のせい？]
 
 == ログのわかりやすさ
+これも完全なる独断と偏見ですが、fluendの方が圧倒的にわかりやすいです。
+同じ原因のエラーログを並べて比較してみます。
+どちらもcsvファイルの列となる文字列を設定し忘れたときのエラーです。
+
+//list[fluentd_error][fluentdのエラーログ]{
+Starting td-agent: 2017-10-08 10:15:48 +0900 [error]: fluent/supervisor.rb:373:rescue in main_process: config error file="/etc/td-agent/td-agent.conf" error="'fields' parameter is required"
+td-agent                                                   [FAILED]
+//}
+
+原因が簡潔にまとまっていてわかりやすいです。
+
+//list[Logstash_error][Logstashのエラーログ]{
+[2017-10-01T13:12:22,348][INFO ][logstash.modules.scaffold] Initializing module {:module_name=>"fb_apache", :directory=>"/usr/share/logstash/modules/fb_apache/configuration"}
+[2017-10-01T13:12:22,352][INFO ][logstash.modules.scaffold] Initializing module {:module_name=>"netflow", :directory=>"/usr/share/logstash/modules/netflow/configuration"}
+[2017-10-01T13:12:22,578][WARN ][logstash.config.source.multilocal] Ignoring the 'pipelines.yml' file because modules or command line options are specified
+[2017-10-01T13:12:22,962][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
+[2017-10-01T13:12:23,399][ERROR][logstash.outputs.csv     ] Missing a required setting for the csv output plugin:
+
+  output {
+    csv {
+      fields => # SETTING MISSING
+      ...
+    }
+  }
+[2017-10-01T13:12:23,401][ERROR][logstash.agent           ] Failed to execute action {:action=>LogStash::PipelineAction::Create/pipeline_id:main, :exception=>"LogStash::ConfigurationError", :message=>"Something is wrong with your configuration."}
+# この1セットが延々と出力される
+//}
+
+Logstashはデータの読み取りごとにエラーログが出力されます。
+だいたい2000行くらいログが一度に出てくるので、ログを読むのは意外と大変です…。
+@<code>{ERROR}の文字列でgrepをかけることをおすすめします。
+
+fluentdはサービス起動時に何かしらのエラーがあるとエラーログを標準出力して動作を停止しますが、Logstashはエラーがあっても一旦サービス起動します。
+その後@<code>{logstash.log}にエラーを出力してサービスを停止します。
+エラー時の動作は、やはりfluentdの方が親切だと思います。
+
+また、fluentdはinfoのログも親切です。
+
+//list[fluentd_info][td-agent.logの抜粋]{
+2017-10-08 13:43:27 +0900 [info]: reading config file path="/etc/td-agent/td-agent.conf"
+# 省略
+2017-10-08 13:43:27 +0900 [info]: using configuration file: <ROOT>
+  <match>
+    @type file
+    path /var/log/csv/test.csv
+    format csv
+    fields Full Name,Country,Created At,Id,Email
+    buffer_path /var/log/csv/test.csv.*
+  </match>
+  <source>
+    @type tail
+    path /var/log/json/*.json
+    pos_file /var/log/td-agent/tmp/json.log.pos
+    format json
+    tag json
+  </source>
+</ROOT>
+2017-10-08 13:43:27 +0900 [info]: following tail of /var/log/json/test.json
+2017-10-08 13:43:55 +0900 [info]: detected rotation of /var/log/json/test.json; waiting 5 seconds
+2017-10-08 13:43:55 +0900 [info]: following tail of /var/log/json/test.json
+//}
+
+自分のコンフィグの設定・データの読み取り対象などが動作ログとして出力されます。
+ログを見るだけで、動作がある程度わかるのは便利ですね。これはfluentdにしかない機能です。
 
 == Windowsとの相性
+これはLogstashに軍配が上がります。
+
+LogstashはWindows用のZipファイルが提供されており、Linux版との機能差もありません。
+対するfluentdですが、現状ではWindowsに対応していないため@<fn>{fluentd_windows}、一旦Linuxサーバーにデータを転送して処理するなどの
+工夫が必要です。Windowsでデータ収集・加工を行うのであれば、おとなしくLogstashを使った方が良いです。
+
+//footnote[fluentd_windows][バージョン0.14では対応していますが、beta版なのでここでは対象外です。]
 
 == Beatsとの相性
+Elastic社が提供する軽量データジッパーのBeats（@<href>{https://www.elastic.co/jp/products/beats}）というプロダクトがあります。
+サーバーのメトリクス情報やネットワークパケットなどを収集し、簡単に整形して転送するツールです。
+ただし、Beatsはデータの複雑な加工はできません。なので、データを加工したい場合はfluentdやLogstashと組み合わせて使うことになります。
+
+ここはやはり、同じElastic社製のLogstashと組み合わせて使う事をおすすめします。
+というのも、BeatsはElastic社独自の@<code>{lumberjack}プロトコルを使用して通信を行います。
+LogstashはBeatsのinputプラグインを使用すれば、問題なくBeatsからデータを取得できます。
+
+fluentdもプラグインを導入すればBeatsと通信できます（@<href>{https://github.com/repeatedly/fluent-plugin-beats}）が、Logstashと比べると情報が少ないのが現状です。
+やはり公式サポートが受けられる、Logstashと組み合わせて使った方が安心かと思います。
 
 == 改行があるデータを扱えるか
+改行があるデータとは、次のようなデータのことです。
+
+//list[data_multiline][改行があるデータ]{
+{
+  "Full Name": "Ms. Florian Bashirian",
+  "Country": "U.S. Minor Outlying Islands",
+  "Created At": "1983-02-20T15:49:44.163Z",
+  "Id": 0,
+  "Email": "Delia_Upton@concepcion.name"
+}
+//}
+
+本当は中括弧で1セットのjsonデータですが、fluentdやLogstashでは改行で1つのデータを認識します。
+なので@<list>{data_multiline}のようなデータを正しく認識させるためには工夫が必要です。
+
+
 
 == インターネット必須度
 どちらもインターネット接続ができない環境では運用するのが難しいです。
