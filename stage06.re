@@ -220,16 +220,14 @@ Installation successful
 
 //cmd{
 input {
-  s3 {
-   bucket => "wp-cdn-buckets"
-   region => "ap-northeast-1"
-   interval => "10"
-   sincedb_path => "/etc/logstash/sincedb"
+  file {
+    path => "/Users/micci/project/logstash-5.5.2/clb.log"
+    start_position => "beginning"
   }
 }
 filter {
   grok {
-    patterns_dir => ["/etc/logstash/patterns/elb_patterns"]
+    patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/clb_patterns"]
     match => { "message" => "%{CLB_ACCESS_LOG}" }
   }
   date {
@@ -241,18 +239,63 @@ filter {
     source => "client_ip"
   }
   mutate {
-    remove_field => [ "date", "message" ]
+    remove_field => [ "date", "message", "path"m ]
   }
-}
 }
 output {
   stdout { codec => rubydebug }
 }
+}
+
+実行結果です。
 
 //cmd{
-
+{
+              "received_bytes" => 0,
+                     "request" => "http://www.example.com:80/",
+                  "backend_ip" => "10.0.0.1",
+                  "ssl_cipher" => "-",
+                "backend_port" => 80,
+                  "sent_bytes" => 29,
+                 "client_port" => 2817,
+         "backend_status_code" => 200,
+                    "@version" => "1",
+                        "host" => "122x208x2x42.ap122.ftth.ucom.ne.jp",
+                         "elb" => "my-loadbalancer",
+                   "client_ip" => "5.10.83.30",
+     "backend_processing_time" => "0.001048",
+                  "user_agent" => "curl/7.38.0",
+                "ssl_protocol" => "-",
+                       "geoip" => {
+              "timezone" => "Europe/Amsterdam",
+                    "ip" => "5.10.83.30",
+              "latitude" => 52.35,
+        "continent_code" => "EU",
+             "city_name" => "Amsterdam",
+          "country_name" => "Netherlands",
+         "country_code2" => "NL",
+         "country_code3" => "NL",
+           "region_name" => "North Holland",
+              "location" => {
+            "lon" => 4.9167,
+            "lat" => 52.35
+        },
+           "postal_code" => "1091",
+           "region_code" => "NH",
+             "longitude" => 4.9167
+    },
+             "elb_status_code" => "200",
+                        "verb" => "GET",
+     "request_processing_time" => "0.000073",
+                     "urihost" => "www.example.com:80",
+    "response_processing_time" => "0.000057",
+                  "@timestamp" => 2015-05-13T23:39:43.945Z,
+                        "port" => "80",
+                       "proto" => "http",
+                 "httpversion" => "1.1"
+}
 }
 
 如何でしたでしょうか？
-AWSのサービスに対してもログを取り込めるということがわかったのではないでしょうか。
+AWSのサービスに対してもログを取り込めるということがわかったのではないでしょうか(dﾟωﾟd)ｵｩｲｪｰ
 この他のサービスに対してもトライして頂ければと思います！
