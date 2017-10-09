@@ -1,15 +1,16 @@
-
 = Logstashに触れてみる
 == 環境について
 Logstash6.0betaがすでにインストールされていることを前提とします。
 インストール方法については、りまりま団のもふもふ（Twitter:@froakie0021）に記載してあるので、そちらを参考にして頂ければと思います！
 （決してサボってるわけじゃないですよwページの有効活用）
 
+
 == 動かす前のLogstash準備
 早速ですが、Logstashを動かしたいと思います！
 
 Logstashを動かすには、confファイルという設定ファイルを読み込ませる必要があります。
 このconfファイルにINPUT・FILTER・OUTPUTの定義することで、Logstashが実行します。
+
 
 === Logstashのディレクトリ構造
 Logstashの一部のディレクトリ構造について記載してますー
@@ -22,12 +23,15 @@ Logstashの一部のディレクトリ構造について記載してますー
 ├ logstash.yml (Logstashの設定ファイル)
 └ startup.options (Logstash起動設定)
 
+
 === confファイルの配置場所について
 logstashがconf.dを読み込みにいくのは、logstash.ymlの64行目に記載してあるためです。
 設定内容をみてわかるとおり、*.confとなっているため、先ほど作成したtest01も.confとしているのです。
+変更する理由がないので、デフォルト設定とします。
 
 //cmd{
 $ vim logstash.yml
+### 64行目
 64 path.config: /etc/logstash/conf.d/*.conf
 //}
 
@@ -78,14 +82,13 @@ Helloと入力したらmessageというフィールドに入ってますね！
 
 
 == とりま。Apacheのアクセスログを取り込んでみよう
-最近、Nginxを使用しているmicci184です。
-でも、今回はApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
-Nginxでもいいんですけど、まだApacheのが需要があるのかなー？って思った感じで選んでみました。
- 　※GoogleトレンドでApache VS Nginxやってみましたが、軍配はApacheでした
+それでは早速ですが、
+ApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
+Nginxでもいいんですけど、Googleトレンドで"Apache VS Nginx"やってみたら、Apacheに軍配が上がったので、Apacheにしました。
 
 以下のサンプルのアクセスログで試していきたいと思いますー
 ログフォーマットは、commonを利用します。
-あとあと、5.10.83.30のグローバルIPはElastic社の使わせて頂いてますm(_ _)m
+あとあと、5.10.83.30のグローバルIPはElastic社のグローバルIPを使わせて頂いてますm(_ _)m
 
 * 5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
 
@@ -117,13 +120,12 @@ output {
 このプラグインは、インプットデータとしてファイルを指定することができます。
 また、ログファイルを読み込み指定をするために"start_position"のオプションを利用してます。
 デフォルトだとendですが、logstashが起動されてから追記されたログを取り込み対象としたいので、biginningを定義してます。
-その他にもオプションがあるので、詳しくは公式サイトを確認して頂ければと思います。
+その他にもオプションがあるので、詳しくは公式サイトの（File input plugin:@<href>{https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html}）を参照してください。
 
-(File input plugin)[https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html]
 
 === アクセスログを取り込むよ！
 先ほど、準備したconfファイルを使用してログを取り込んでいきたいと思いますー
-ではでは、早速実行っと。。
+ではでは、早速実行します！
 
 //cmd{
 $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
