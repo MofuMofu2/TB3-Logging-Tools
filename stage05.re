@@ -1,15 +1,18 @@
-= まだいくよ！Grok
+= "Grok使い"への道
 == 今度は何を取り込む？
-前章ではApacheのアクセスログを取り込めるようになりました。
+前章でApacheのアクセスログを取り込めるようになりました。
 そこで既存のGrokPatternだけではどうにもならない系のログを対象にGrokしていきたいと思います。
 
-ちなみにですが、FireWallという括りでCISCOのASAのGrokPatternが用意されているものもあります。
-なので、イベントIDと照らし合わせてすでにあるものは利用する形がよいです。
-ただ、今回取り上げるのは、先にも伝えたようにGrokPatternにないものを選定していますが、
-使えるものは使っていきたいと思います。
+ちなみにですが、GrokPattenは様々なものが用意されてます。
+例えば、"Java"、"bind"、"Redis"など。
+また、FireWallという括りでCISCOのASAのGrokPatternが用意されているものもあります。
+ただ、すべてがまかなえてるかと言うとまかなえてないです。
 
-今回は、CISCOのファイアウォール製品であるASAのログを取り込みたいと思いますー
+なので、今回はCISCOのファイアウォール製品であるASAのログを取り込みたいと思いますー
 やっぱり企業を守っているファイアウォールがどんなログを出しているか気になりますよね！？（薄っぺらいw）
+あ、でも使えるGrokPatternは積極的に使います！
+当たり前ですが、"あるものは使う！"、"ないものは作る！"という心得でいきましょー
+
 
 といことで今回は以下のログを対象にしたいと思います。
  ※IPアドレスは、適当なプライベートIPアドレスを割り当てています
@@ -17,44 +20,40 @@
 * Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
 * Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
 
-ということで、いつも通りに以下のログ取り込みフローで進めたいと思います！
+いつも通りに以下のログ取り込みフローで進めたいと思います！
 
 <ログ取り込みフロー>
 1. ログフォーマットを調べる
 2. フィールド定義
 3. GrokPatternをつくる
 4. Grok Constructorでテスト
-5. logstashのconfファイルで動かしてみる
+5. logstashを動かしてみる
+
 
 === ログフォーマットを調べる
 まずは、ログフォーマットを調べる！
 Ciscoさんは丁寧にログフォーマットを掲載してます。
 
-@<href>{https://www.cisco.com/c/en/us/td/docs/security/asa/syslog/b_syslog.html}
+（Cisco_syslog:@<href>{https://www.cisco.com/c/en/us/td/docs/security/asa/syslog/b_syslog.html}）
 
 ...よく見るとわかりますが、数が多いw
 まぁ、Ciscoって世界最大ですからねー(*ﾟ∀ﾟ)/ｱｯｹﾗｶﾝ
 
-まず該当するログフォーマットを探す方法ですが、以下のログに"%ASA-6-606001"という記載がありますので、このメッセージNo.の"606001"で検索することができます。
-
-//image[cisco_grok01][CiscoASAでログ#01][scale=0.5]{
-  cisco_log検索画面
-//}
-
-@<href>{https://www.cisco.com/c/en/us/td/docs/security/asa/syslog/b_syslog/syslogs6.html}
+まず該当するログフォーマットを探す方法ですが、以下のログに"%ASA-6-606001"という記載がありますので、このイベントNo.の"606001"で検索することができます。
 
 このログフォーマットは以下のようになっています。
 
 * %ASA-6-606001: ASDM session number number from IP_address started
 * %ASA-6-606002: ASDM session number number from IP_address ended
 
-ASDMのセッションを開始した時と終了した時に出力するログです。
-ASDMはWebベースの管理インターフェースを提供するツールです。
+ASDMのセッションを開始した時と終了した時に出力するログですね。
+　※ASDMはWebベースの管理インターフェースを提供するツール
 
-=== フィールド定義していくよ！
+
+=== フィールド定義
 ではでは、フィールド定義ですが、左から順にやっていきます。
 先ほど見たログフォーマットには、タイムスタンプとASA-01というのがなかったと思います。
-これらは、ログイベントに関わらず必ず記載されるので、こちらも定義します。
+これらは、ログに必ず記載されるので、こちらも定義します。
 
 * Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
 ** timestamp: Jun 20 10:21:34 (date)
@@ -66,18 +65,20 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 
 実際のログに記載されているメッセージ内容のすべてが、フィールドにマッピングされていないことがわかります。
 例えば、"ASDM session number"というメッセージに対して意味はなく、そのセッションナンバーが知りたいのです。
-そのため、フィールド名に"ASDM session number"とし、値としては取り込まないようにしています。
-その他の"from"も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、src_ip（ソースIP）というフィールドにIPアドレスを値として取り込んでいます。
+そのため、フィールド名に"ASDM session number"とし、値としては取り込まないようにします。
+その他の"from"も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、src_ip（ソースIP）というフィールドにIPアドレスを値として取り込みたいと思います。
 
 次のログですが、最後の"ended"しか変わらないということがわかります。
-なので、先ほどのフィールド定義を使用します。
+なので、先ほどのフィールド定義をそのまま使用するので割愛します。
 
 * Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
 
-=== GrokPatternをつくるよ
+
+== GrokPatternをつくる
 それでは、GrokPatternを作っていきます。
 
 * Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
+
 
 === 共通部分
 タイプスタンプとホスト名、イベントIDはすべてのログに入るメッセージのため、共通部分とします。
@@ -102,13 +103,15 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 上記のように作成することで好きなGrokPatternを作成することができます。
 これをCustomPatternといいます。
 
+
 == 固有部分
 ここからはイベント毎に異なる固有部分のGrokPatternを作っていきます。
 共通部分を取り除いた部分の以下が対象ですね。
 
 * : ASDM session number 0 from 192.168.1.254 ended
 
-=== ASDMセッションNo.
+
+=== ASDMセッションNo
 フィールド定義で記載した通りですが、ASDMセッションNo.をフィールドとし、値が取得できればよいわけです。
 なので、以下のようになります。
 
@@ -116,25 +119,25 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 
 これも見てわかる通り、CustomPatternで作成しています。
 一つ一つみていくと(?)の外に"ASDM session nubber"がありますね。
-これは、"ASDM session number"をマッチしても値は取得しない場合に使うやり方です。
-なので、隣の"(?<ASDM-session-number>\s[0-9]+)"CustomPatternで取得した値が"ASDM-session-number"というフィールに入るかたちです。
-正規表現部分は、"\s"のスペースと"[0-9]"の数字複数並んでも対応できるように"+"を使用しているかたちです。
+これは、"ASDM session number"をマッチしても値は取得したくない場合に使うやり方です。
+なので、隣の"(?<ASDM-session-number>\s[0-9]+)"CustomPatternで取得した値が"ASDM-session-number"というフィールドに入るかたちです。
+正規表現部分は、"\s"のスペースと"[0-9]"の数字複数並んでも対応できるように"+"を使用してます。
 
-最終的に先頭の":"とスペースも含むので以下な感じになりますー
+最終的に先頭の":"とスペースも含むので以下な感じになります。
 
 * :\sASDM session number(?<ASDM-session-number>\s[0-9]+)
 
+
 === ソースIPアドレス
 これはApacheのアクセスログでやったことと一緒ですね。
-まぁ、IPアドレスのGrokPatternのように他にも確立されているものは積極的に使っていきましょう。
-あるものは使う、なければCutomPattern！
-当たり前のことですが、GrokPatternにあるのにCustomPatternで頑張ってしまうという経験をしてしまう時期がくるかもなのでw
+IPアドレスのGrokPatternのように他にも確立されているものは積極的に使っていきましょう。
+あるものは使う、なければCustomPattern！
 
 * from 192.168.1.254
 
 これは、フィールド定義で説明したようにソースIPなので、GrokPatternの"IP"を使用し、不要な部分を取り除く必要があります。
 スペースと"from"が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
-結果、以下の感じになりますー
+結果、以下になります。
 
 * (\sfrom\s%{IP:src_ip})
 
@@ -154,7 +157,8 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 "|"パイプを入れることで選択できるようになります。
 これで整ったので、GrokConstructorでテストをしてみたいと思います。
 
-== Grok Constructorで全体テスト
+
+== Grok Constructorでテスト
 パターンファイルを抽出し、テストを実施します。
 
 * パターンファイル
@@ -167,11 +171,12 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 
 実行結果は以下です！
 
-//image[grok04][ASA Grok結果#03][scale=0.5]{
-  Grokパワポ
+//image[stage05-01][ASA Grok Constructor結果#01][scale=0.5]{
+  Grok Constructor
 //}
 
-== Logstashのconfファイルの作成
+
+== logstashを動かしてみる
 ここまできましたね！
 ここまできたら後少し！ということでApacheのアクセスログの時と同様に作成していきたいと思いますー
 
@@ -179,7 +184,7 @@ ASDMはWebベースの管理インターフェースを提供するツールで�
 
 === パターンファイル
 タイムスタンプやらホスト名、イベントIDそしてイベントメッセージのGrokPatternをパターンファイルに定義します。
-"CISCOFW606001"に"606002"も含んでいるのですが、文字数が長くなるのが個人的に嫌なため"606001"に集約してます。
+GrokPatternの"CISCOFW606001"に"606002"も含んでいるのですが、文字数が長くなるのが個人的に嫌なため"606001"に集約してます。
 なので、含んでいることがわかりにくいと思う方は変更しても問題ないです！
 
 //cmd{
@@ -191,11 +196,17 @@ CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%
 
 これでパターンファイルの準備は完了です。
 
-パターンファイルの
+補足ですが、パターンファイルをGrok Constructorでテストすることも可能です。
+実際に作成したパターンファイルでテストを実施した結果です。
 
-=== Logstash Conf
-最後きたよ！
-Logstashのconfファイル作成して実行して動いたら勝ちパターンだよ！
+//image[stage05-02][ASA Grok Constructor結果#02][scale=0.5]{
+  Grok Constructor
+//}
+
+
+=== logstash.conf
+ここまできましたね！
+Logstashのconfファイル作成して実行して動いたら勝ちパターン！
 
 Apacheの時と同様に作成してみたのが以下です！
 
@@ -203,13 +214,13 @@ Apacheの時と同様に作成してみたのが以下です！
 $ vim conf.d/asa.conf
 input {
   file {
-  	path => "/Users/micci/project/logstash-5.5.2/asa.log"
+  	path => "/etc/logstash/log/asa.log"
   	start_position => "beginning"
   }
 }
 filter {
   grok {
-  	patterns_dir => ["/Users/micci/project/logstash-5.5.2/patterns/asa_patterns"]
+  	patterns_dir => ["/etc/logstash/patterns/asa_patterns"]
   	match => { "message" => "%{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}" }
   }
   date {
@@ -251,10 +262,7 @@ output {
 
 想定通りにログを抽出できましたね！
 GrokPatternにあるものは積極的に使用し、ないものはCustomPatternで作る！といったことを学習できたのではないでしょうか。
-CiscoのASAを今回取り上げましたが、まだまだGrokするログはあります。
-なので、更にGrokに慣れるためにも色々とトライして見てください！
+CiscoのASAを今回取り上げましたが、この他のログも同様に対応していくことが可能です。
+更に"Grok使い"になるためにも様々なログにトライしてみてください！
 
 それでは本章はこれでおわりですー
-
-
-
