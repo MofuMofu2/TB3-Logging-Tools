@@ -1,4 +1,4 @@
-= アクセスログをいい感じに取り込んでみよう
+= Apacheのアクセスログをいい感じに取り込もう！
 == ログを取り込むまでのステップ
 ログをよしなに取り込むにはFILTERでログフォーマットに合わせて定義をする必要があります。
 なので、この章ではどのようにログを取り込むかをステップを踏んで解説していきたいと思います。
@@ -11,12 +11,12 @@
 5. logstashのconfファイルで動かしてみる
 
 結構、ステップ面倒いなーって思う人もいるかと思いますが、一つ一つクリアしていくことが大切だと思ってます。
-地味ーな作業が盛りだくさんですが、自分の思った通りにFILTERがかかった時が最高に嬉しい瞬間です！
+地味な作業が盛りだくさんですが、自分の思った通りにFILTERがかかった時が最高に嬉しい瞬間です！
 
 それでは一つ一つ見ていきたいとおもいまするー
 
-=== 取り込むログフォーマットを調べる
 
+=== ログフォーマットを調べる
 今回取り込むログは、Apacheのログフォーマットのcommonを対象にします。
 Apacheのサイトからログフォーマットについて調べると色々と記載されてます。
 
@@ -31,8 +31,8 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** %>s: ステータスコード
 ** %b: クライアントに送信されたオブジェクトサイズ（送れなかった時は、"-"）
 
-===フィールド定義していくよ
 
+=== フィールド定義
 アクセスログのログフォーマットがわかったので、フィールド名を定義していきたいと思います。
 また、この時にタイプも定義しておくとよいです。
 てことで、()内にタイプを記載します。
@@ -60,22 +60,26 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 ** response: 200
 ** bytes: 2326
 
-=== GrokPatternつくるよ
-Grokは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
-Grokは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
-ただ、GrokPatternにないものは自分で作成する必要があります！
-そこも含めて解説できればと思いますm(_ _)m
 
-(GrokPattern)[https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns]
+=== GrokPatternをつくる
+Grok Filterは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
+Grok Filterは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
+ただ、GrokPatternにないものは自分で作成する必要があります！
+そこは、次章で説明したいと思いますm(_ _)m
+
+
+（GrokPattern:@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
+
 
 それでは、ここからはフィールド一つ一つを見ていってGrokPatternを作成していきたいと思います。
-GrokPatternを作成していくには、ログの左から順に攻略していくのが重要です。
+GrokPatternを作成していくには、ログを左から順に攻略していくのが重要です。
 ということを念頭において進めていきたいと思います。
 
 ちなみにですが、そもそものGrokFilterの書き方とかはひとまず置いておきます！
 後ほど、その辺は詳しく書きます。
 
 それではここからは先ほどフィールド定義した順番で解説していきます。
+
 
 === ClientIP
 ClientIPといことで、IPアドレスにマッチさせる必要があります。
@@ -98,7 +102,7 @@ HOSTNAMEに正規表現が記載されていることがわりますね。
 これも同じ様にサイトをみると正規表現で記載されていることがわかると思います。
 
 IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、(?:)と|（パイプ）はなんぞや？と思った人もいると思いますが、
-この(?:)は、文字列をマッチさせたい&&キャプチャさせたくない場合に使います（キャプチャは使用しないので説明しません！w）
+この(?:)は、文字列をマッチさせたい&&キャプチャさせたくない場合に使います（キャプチャは使用しないので説明しません）
 今回でいう文字列は、%{HOSTNAME}と%{IP}に該当する文字列を指します。
 また、|は、どちからか一方が一致した方を採用するという意味です。
 
@@ -110,28 +114,32 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 これらを図にすると以下です。
 
-//image[grok01][IPアドレスをGrokするイメージ図#01][scale=0.5]{
-  Grokパワポ
+//image[stage04-01][IPアドレスをGrokするイメージ図#01][scale=0.5]{
+  Grok説明図
 //}
 
 それでは、実際にGrokがマッチするかをGrok Constructorを使って確認してみたいと思います。
 
-== Grok Constructor
-(Grok Constructor)[http://grokconstructor.appspot.com/do/match]は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
-この他にも(GrokDebugger)[https://grokdebug.herokuapp.com/]やKibanaのDevToolで提供しているGrokDebuggerなどがあります。
-であれば、KibanaのDevTool使えよ！というご意見もあるかと思いますが、ライトにGrokPatternを作成したいと思いから、Grok Constructorを使用してます。
+
+== Grok Constructorでテスト
+（Grok Constructor:@<href>{http://grokconstructor.appspot.com/do/match}）は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
+この他にも（GrokDebugger:@<href>{https://grokdebug.herokuapp.com/}）やKibanaのDevToolで提供しているGrokDebuggerなどがあります。
+であれば、KibanaのDevTool使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいため、Grok Constructorを使用します。
 また、個人的に使いやすいというのが大きいですがw
 
 Grok Constructorの使い方を以下の図で解説したいと思います。
 
-//image[grok_constructor01][Grok Constructorでテスト#01][scale=0.5]{
-  Grokパワポ
+//image[stage04-02][Grok Constructorでテスト#01][scale=0.5]{
+  Grok Constructor
 //}
 
 それでは早速、先ほど作成したGrokPatternがうまい具合にマッチするか試したいと思います。
 
-//image[grok_constructor02][Grok Constructorでテスト#02][scale=0.5]{
-  Grokパワポ
+
+=== clientip
+
+//image[stage04-03][Grok Constructorでテスト#02][scale=0.5]{
+  Grok Constructor
 //}
 
 想定通り、clientipというフィールドに "5.10.83.30"というIPアドレスがマッチしたことがわかります。
@@ -145,8 +153,8 @@ Grok Constructorの使い方を以下の図で解説したいと思います。
 先ほどの様に、上記のGrokPatternでGrok Constructorでテストを実施するとIPアドレスが引っかかると思います。
 なので、%{IPORHOST:clientip}を含んでテストを実施してみてください。
 
-//image[grok_constructor03][Grok Constructorでテスト#03][scale=0.5]{
-  Grokパワポ
+//image[stage04-04][Grok Constructorでテスト#03][scale=0.5]{
+  Grok Constructor
 //}
 
 === auth
@@ -160,26 +168,27 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 時刻のフォーマットは、"[day/month/year:hour:minute:second zone]"です。
 これに当てはまるGrokPatternを探していたいと思いますー
 
-結果、以下のGrokPatternが当てはまることがわかります。
+以下のGrokPatternが当てはまることがわかります。
 
 * HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
 
 なので、こちらを使用してGrok Constructorでテストしてみたいと思います。
 先ほど作成したGrok Constructorに連ねてきましょー
 
-//image[grok_constructor04][Grok Constructorでテスト#04][scale=0.5]{
-  Grokパワポ
+//image[stage04-05][Grok Constructorでテスト#04][scale=0.5]{
+  Grok Constructor
 //}
 
 あれ？"NOT MATCHED"ですね。。
 そうなんです！
-じつは、%{HTTPDATE}に該当しない[]があるのです。
-なので、以下の図で示している通り、[]を取り除く必要があるのです！
+じつは、%{HTTPDATE}に該当しない"[]"があるのです。
+なので、以下の図で示している通り、"[]"を取り除く必要があるのです！
 無効化するにはエスケープ\（バックスラッシュ）を使用します。
 
-//image[grok02][IPアドレスをGrokするイメージ図#02][scale=0.5]{
-  Grokパワポ
+//image[stage04-06][IPアドレスをGrokするイメージ図#02][scale=0.5]{
+  Grok
 //}
+
 
 === リクエスト
 それでは、クライアントからのリクエストについて攻略したいと思いますー
@@ -213,36 +222,37 @@ NOTSPACEは、空白文字以外にマッチのため、空白文字が出現す
 
 てことで、ここまでを以下の図にまとめましたーヽ(*ﾟдﾟ)ノ
 
-//image[grok03][IPアドレスをGrokするイメージ図#03][scale=0.5]{
+//image[stage04-07][IPアドレスをGrokするイメージ図#03][scale=0.5]{
   Grokパワポ
 //}
 
-=== response & bytes
 
+=== response & bytes
 ここまできたらあと少し！
 responseは、ステータスコードなので、NUMBERを使用します。
 また、bytesも同様にNUMBERを使用しますが、オブジェクトが送れなかった場合は、"-"のため、|で"-"を追加します。
 
 これで全て整ったので、Grok Constructorでテストしたいと思います。
 
-== Grok Constructorで全体テスト
+
+=== Grok Constructor全体テスト
 以下のGrokPatternでテストをしたいと思います。
 
 * %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 
-//image[grok_constructor04][Grok Constructorでテスト#04][scale=0.5]{
-  Grokパワポ
+//image[stage04-08][Grok Constructorでテスト#04][scale=0.5]{
+  Grok Constructor
 //}
 
 問題なくマッチしましたね！
 
-== Logstashのconfファイルの作成
-やっとここでLogstashのconfファイルが登場しますw
-長かったですねw
+
+== logstashのconfファイルで動かしてみる
+やっとここでLogstashのconfファイルが登場します。
 てことで、confファイルを作成したいと思いますー
 
 今までは、INPUTとOUTPUTのみでしたが、先ほど作成したGrokPatternを埋め込みたいので、FILTERを追加します。
-そこにGrokPatternを直接、Logstashのconfファイルにコーディングするのも可能ですが、可読性を意識したいため、GrokPatternをファイルとして外出しします。
+GrokPatternをFILTERに直接コーディングすることも可能ですが、可読性を意識したいため、GrokPatternをファイルとして外出しします。
 
 外出しするため、以下の作業を実施します。
 
@@ -326,7 +336,7 @@ filter {
     target => "timestamp"
   }
   mutate {
-    remove_field => [ "message", "path", "host" ]
+    remove_field => [ "message", "path", "host", "date" ]
   }
 }
 output {
@@ -335,18 +345,17 @@ output {
 
 各々のフィルターについて図と合わせて説明します。
 
-//image[grok04][Logstash.confのイメージ#01][scale=0.5]{
-  Grokパワポ
+//image[stage04-09][Logstash.confの説明][scale=0.5]{
+  Logstash.conf
 //}
 
-1. ファイルの読み込み位置を指定するためで、Logstash起動前のログも対象としたいため、biginningとしてます
-　　※デフォルト値：end
+1. ファイルの読み込み位置を指定するためで、Logstash起動前のログも対象としたいため、"biginning"としてます
 2. パターンファイルの読み込み
-3. messageフィールドに格納されてい値を”HTTPD_COMMON_LOG”でマッチングします
+3. messageフィールドに格納されている値を”HTTPD_COMMON_LOG”でマッチングします
 4. パターンファイル内でIPアドレスをマッチングさせているclientipフィールドを対象にgeoipフィルタを利用し、地理情報を取得します
 5. Logstashは、ログデータを取り込んだ時間を@timestampに付与するので、dateフィルタを用いることで実際のログデータのタイムスタンプを付与することができます
-6. パターンファイル内のdateフィールドに対して定義したデートパターンとマッチする場合に値を書き換えます
-7. 日付の月がOctになっているため、localeを"en"に指定してます
+6. パターンファイル内のdateフィールドに対して定義したdateパターンとマッチする場合に値を書き換えます
+7. 日付の月が"Oct"になっているため、localeを"en"に指定してます
 8. 変更を変えたいターゲットとして"@timestamp"を指定します
 9. 不要なフィールドをremove_fieldで指定し、削除します（容量を抑えるためと不必要な情報を与えないため）
 
@@ -394,10 +403,9 @@ output {
 それでは、次章でーヽ(*ﾟдﾟ)ノ
 
 == 補足
-
 Grok Constructorで、作成したGrokPatternをテストすることも可能です。
 以下の図にあるとおりにテストして頂ければと思います。
 
-//image[grok_constructor06][Grok Constructorでテスト#06][scale=0.5]{
-  Grokパワポ
+//image[stage04-10][Grok Constructorでテスト#05][scale=0.5]{
+  Grok Constructor
 //}
