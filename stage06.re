@@ -59,10 +59,10 @@ ELBのログフォーマットを調べたいと思います。
 なので、ここでは、フィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
 サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってます。
 
-* 2015-05-13T23:39:43.945958Z my-loadbalancer 192.168.131.39:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
+* 2015-05-13T23:39:43.945958Z my-loadbalancer 5.10.83.30:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
 ** timestamp: 2015-05-13T23:39:43.945958Z (date)
 ** elb: my-loadbalancer (string)
-** client_ip: 192.168.131.39 (string)
+** client_ip: 5.10.83.30 (string)
 ** client_port: 2817 (string)
 ** backend_ip: 10.0.0.1 (string)
 ** backend_port: 2817 (string)
