@@ -249,10 +249,7 @@ output {
   stdout { codec => rubydebug }
 }
 
-実行結果です！
-
 //cmd{
-### EventID: 606001
 
 }
 
