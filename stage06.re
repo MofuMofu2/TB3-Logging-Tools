@@ -1,24 +1,24 @@
-= AWSサービスのログを取り込むよ！
+= おまけ！！
 == 何を取り込むか
-AWSサービスはログを出力する機能をもったサービスがあります。
-そのなかでも今回は以下のサービスのログに対してLogstashでINPUT・FILTER・OUTPUTするところまでを実施したいと思いますー
+本当は、5章で終わろうと思ったのですが、AWSに踏み込んだ話もしたいなーって思って書きました。
+知ってる方も多いと思いますが、AWSサービスはログを出力する機能をもったサービスがあるのです。
+そのなかでも今回は以下のサービスのログに対してLogstashで取り込んでみたいと思いますー
 
 * ELBアクセスログ
-* VPC FlowLogs
 
 AWSサービスのログを取り込むイメージです。
 
-//image[aws_log01][AWS Log取得構成#01][scale=0.5]{
-  Grokパワポ
+//image[stage06-01][ELBログ取得イメージ][scale=0.5]{
+  ELB
 //}
 
-この他にもCloudtrailやS3などもログを出力し、構造化することが可能です
-ページ数の制限により記載できませんが、どこかでお披露目できればと考えてますヽ(*ﾟдﾟ)ノ
-
+この他にもCloudtrailやS3などもログを出力し、取り込むことが可能です。
+どこかでお披露目できればと考えてますヽ(*ﾟдﾟ)ノ
 
 
 == ELBのログを取り込むよ！
-第4章で説明したログ取り込みフローに乗っ取って進めたいと思います。
+いままで説明した"ログ取り込みフロー"に乗っ取って進めたいと思います。
+
 
 == ログフォーマットを調べる
 ELBのログフォーマットを調べたいと思います。
@@ -26,10 +26,11 @@ ELBのログフォーマットを調べたいと思います。
 もし設定されていない方は、公式ドキュメントを確認頂ければと思いますー
 
 公式ドキュメントにアクセスログのフォーマットが記載されています。
-(Classic Load Balancerアクセスログ)[http://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/classic/access-log-collection.html]
+（Classic Load Balancerアクセスログ:@<href>{http://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/classic/access-log-collection.html}）
 
 うーん。。長い！
 ということで一つ一つ分解していきます。
+
 
 * timestamp elb client:port backend:port request_processing_time backend_processing_time response_processing_time elb_status_code backend_status_code received_bytes sent_bytes "request" "user_agent" ssl_cipher ssl_protocol
 ** timestamp: ロードバランサーがクライアントからリクエストを受け取った時刻 (ISO 8601 形式)
@@ -56,7 +57,7 @@ ELBのログフォーマットを調べたいと思います。
 また、requestも分割します。
 
 なので、ここでは、フィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
-サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってますー
+サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってます。
 
 * 2015-05-13T23:39:43.945958Z my-loadbalancer 192.168.131.39:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
 ** timestamp: 2015-05-13T23:39:43.945958Z (date)
@@ -84,12 +85,14 @@ ELBのログフォーマットを調べたいと思います。
 
 こん感じにマッピングされるようにGrokPatternを作成していきたいと思いますー
 
-== GrokPatternをつくるよ
+
+== GrokPatternをつくる
 前の章でやったようにGrokPatternを作っていきましょう！
 実は、AWSのELBは、GrokPatternが用意されているのです。
 ただね。
-それを使う！だけじゃGrok芸人にはなれんのですよ！
+それを使うだけじゃGrok芸人にはなれんのですよ！
 ちゃんと理解して、自由にry
+
 
 === timestamp
 ELBの時刻形式は、ISO8601のフォーマットを利用しています。
@@ -97,11 +100,13 @@ ELBの時刻形式は、ISO8601のフォーマットを利用しています。
 
 * %{TIMESTAMP_ISO8601:date}
 
+
 === elb
 elbの名前ですね！
 コレはユーザが任意につける名前なので、GrokPatternの"NOTSPACE"を使用します。
 
 * %{NOTSPACE:elb}
+
 
 === client_ip & client_port
 Apacheアクセスログと同様に"IPORHOST"を使用したくなりますが、コレはやりすぎです。
@@ -110,25 +115,30 @@ Apacheアクセスログと同様に"IPORHOST"を使用したくなりますが�
 
 * (?:%{IP:client_ip}:%{INT:client_port:int})
 
+
 === backend_ip & backend_port
-上記のClient同様です！
+上記のclient_ipとclinet_port同様です！
 が、しかし。
 バックエンドから応答がない場合は、"-"となるため、|で"-"も記載します。
 
 * (?:%{IP:backend_ip}:%{INT:backend_port:int}|-)
 
+
 === リクエストタイム3兄弟
 これらすべてGrokPatternの"NUMBER"を使用し、応答がなかったように|で"-1"も記載します。
+このフィールドを利用するこで、ELBが受け付けてからのレイテンシを測ることができます。
 
 * (?:%{NUMBER:request_processing_time:double}|-1)
 * (?:%{NUMBER:backend_processing_time:double}|-1)
 * (?:%{NUMBER:response_processing_time:double}|-1)
+
 
 === elb_status_code & backend_status_code
 Apacheのアクセスログと同様にステータスコードは、"NUMBER"を使用します。
 
 * (?:%{INT:elb_status_code}|-)
 * (?:%{INT:backend_status_code:int}|-)
+
 
 === received_bytes & sent_bytes
 バイトも同様にNUMBERを使用します。
@@ -154,11 +164,13 @@ GrokPatternをみると"ELB_REQUEST_LINE"というのがあります。
 
 * ELB_URIPATHPARAM %{URIPATH:path}(?:%{URIPARAM:params})?
 
+
 === user_agent
 Apacheアクセスログで使用したGrokPatternの"DATA"を使用します。
 "GREEDYDATA"というGrokPatternもあるのですが、最長マッチになってしまうため、想定外のものとマッチしてしまうため、DATAを使用します。
 
 * (?:%{DATA:user_agent}|-)
+
 
 === ssl_cipher & ssl_protocol
 SSL通信時に使用するフィールドで、使用していない場合は、"-"が付くため|を記載します。
@@ -166,35 +178,47 @@ SSL通信時に使用するフィールドで、使用していない場合は�
 * (?:%{NOTSPACE:ssl_cipher}|-)
 * (?:%{NOTSPACE:ssl_protocol}|-)
 
-=== Grok Constructorでテスト
+
+== Grok Constructorでテスト
 個々のテスト結果は省いてますが、慣れるまでは一つ一つクリアしていってください！
 あ！ちなみに、今回作成したGrokPattern名がELBではなくCLBなのは、Application Load Balancer（以下、ALB）と区別するためです。
 ALBとCLBでは、ログフォーマットが若干違うため、区別してます。
+
 ALB版も合わせてGrokPatternを記載しますー
 
 * CLB_ACCESS_LOG %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port:int}) (?:%{IP:backend_ip}:%{INT:backend_port:int}|-) (?:%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code:int}|-) %{INT:received_bytes:int} %{INT:sent_bytes:int} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-)
 * ALB_ACCESS_LOG %{NOTSPACE:type} %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port}) (?:%{IP:backend_ip}:%{INT:backend_port}|-) (:?%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code}|-) %{INT:received_bytes} %{INT:sent_bytes} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-) %{NOTSPACE:target_group_arn} \"%{NOTSPACE:trace_id}\"
 
-といことで、Grok Constructorの結果です！
+CLBのGrok Constructorの結果です！
 
-//image[grok_constructor07][Grok Constructorでテスト#07][scale=0.5]{
-  Grokパワポ
+//image[grok_constructor08][CLB Grok Constructor結果][scale=0.5]{
+  Grok Constructor
 //}
 
-ちなみに、ALBは、以下な感じですー
 
-//image[grok_constructor08][Grok Constructorでテスト#08][scale=0.5]{
-  Grokパワポ
-//}
-
-== Logstashのconfファイルの作成
+== logstashを動かしてみる
 ここからconfファイルの作成ですが、Apacheのアクセスログと構造はほぼ一緒です。
 ただ、大きく違うのがINPUTがファイルパスではなく、S3からという点です。
 なので、S3をINPUTにした取り込み方法について解説していきたいと思います。
 FILTERとOUTPUTに関しては、最終的なconfファイルを記載するかたちとしますー
 
+=== Install S3 Plugin
+S3をINPUTとしてログを取得するには、Pluginをインストールする必要があります。
+インストール手順を以下に記載します。
 
+//cmd{
+/usr/share/logstash/bin/logstash-plugin install logstash-input-s3
+Validating logstash-input-s3
+Installing logstash-input-s3
+Installation successful
+}
 
+また、S3にアクセスできるようにIAM Roleの設定がされていることを前提としてます。
+
+=== logstash.conf
+準備が整ったので以下にlogstash.confを記載します。
+
+//cmd{
 input {
   s3 {
    bucket => "wp-cdn-buckets"
@@ -203,14 +227,35 @@ input {
    sincedb_path => "/etc/logstash/sincedb"
   }
 }
+filter {
+  grok {
+    patterns_dir => ["/etc/logstash/patterns/elb_patterns"]
+    match => { "message" => "%{CLB_ACCESS_LOG}" }
+  }
+  date {
+    match => [ "date", "ISO8601" ]
+    timezone => "Asia/Tokyo"
+    target => "@timestamp"
+  }
+  geoip {
+    source => "client_ip"
+  }
+  mutate {
+    remove_field => [ "date", "message" ]
+  }
+}
+}
+output {
+  stdout { codec => rubydebug }
+}
 
-/usr/share/logstash/bin/logstash-plugin install logstash-input-s3
-Validating logstash-input-s3
-Installing logstash-input-s3
-Installation successful
+実行結果です！
 
+//cmd{
+### EventID: 606001
 
-AWS Access Key ID [None]:
-AWS Secret Access Key [None]:
-Default region name [None]: ap-northeast-1
-Default output format [None]: json
+}
+
+如何でしたでしょうか？
+AWSのサービスに対してもログを取り込めるということがわかったのではないでしょうか。
+この他のサービスに対してもトライして頂ければと思います！
