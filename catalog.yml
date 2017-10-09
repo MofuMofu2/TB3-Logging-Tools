@@ -5,8 +5,15 @@ CHAPS:
   - chapterB.re
   - chapterC.re
   - chapterD.re
-  - chapterE.re
   - chapterF.re
+  - stage01.re
+  - stage02.re
+  - stage03.re
+  - stage04.re
+  - stage05.re
+  - stage06.re
+  - stage07.re
+  
 APPENDIX:
 
 POSTDEF:
