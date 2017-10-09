@@ -119,7 +119,8 @@ Elastic社が提供する軽量データジッパーのBeats（@<href>{https://w
 というのも、BeatsはElastic社独自の@<code>{lumberjack}プロトコルを使用して通信を行います。
 LogstashはBeatsのinputプラグインを使用すれば、問題なくBeatsからデータを取得できます。
 
-fluentdもプラグインを導入すればBeatsと通信できます（@<href>{https://github.com/repeatedly/fluent-plugin-beats}）が、Logstashと比べると情報が少ないのが現状です。
+fluentdもプラグインを導入すればBeatsと通信できます（@<href>{https://github.com/repeatedly/fluent-plugin-beats}）が、
+Logstashと比べると情報が少ないのが現状です。
 やはり公式サポートが受けられる、Logstashと組み合わせて使った方が安心かと思います。
 
 == 改行があるデータを扱えるか
@@ -138,6 +139,34 @@ fluentdもプラグインを導入すればBeatsと通信できます（@<href>{
 本当は中括弧で1セットのjsonデータですが、fluentdやLogstashでは改行で1つのデータを認識します。
 なので@<list>{data_multiline}のようなデータを正しく認識させるためには工夫が必要です。
 
+fluentdの場合、@<code>{multiline}プラグイン（@<href>{https://docs.fluentd.org/v0.12/articles/parser_multiline}）を使用することで、
+複数行のデータを取得することができるようになります。
+
+//list[fluentd_multiline][mltilineプラグイン]{
+<source>
+# 記述省略
+format multiline
+</source>
+//}
+
+Logstashの場合、inputプラグインのオプションで@<code>{codec => multiline}
+（@<href>{https://www.elastic.co/guide/en/logstash/6.x/plugins-codecs-multiline.html}）を指定すると
+複数行のデータを取得できます。@<code>{what}は@<code>{pattern}で設定した表現の前か後、どちらをデータとして読み取るか決定するための設定です。
+
+
+//list[Logstash_mltiline][codec => mltiline]{
+input {
+  何かしらのプラグイン {
+    codec => multiline {
+      pattern => "正規表現でデータの型を記載"
+      what => "previous/next"
+    }
+  }
+}
+//}
+
+これらの情報から、fluentd・Logstash共に複数行のデータは取得できるため機能差はないことがわかります。
+ただし、データを正規表現に直して記載するのは大変です。できればデータの出力時点で改行がないようにしておきたいものです。
 
 
 == インターネット必須度
