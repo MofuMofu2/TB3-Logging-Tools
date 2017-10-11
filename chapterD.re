@@ -6,9 +6,12 @@ fluentdとLogstashのコンフィグ形式は、かなり違いがあります�
 
 ちなみに、jsonファイルは@<href>{http://www.databasetestdata.com/}を利用して作成しました。
 json,csv,xmlから拡張子を選択しデータの中身を項目を指定すれば、自動でテストデータが生成されます。
+本の表記の都合で改行していますが、実際に使用したデータは改行はありません。
 
 //list[test_json][今回使用したjsonファイル]{
-{"Full Name": "Sheldon Tillman","Country": "Peru","Created At": "1980-11-13T17:37:36.702Z","Id": 0,"Email": "Carolanne_Kub@emmalee.name"}
+{"Full Name": "Sheldon Tillman","Country": "Peru",
+"Created At": "1980-11-13T17:37:36.702Z",
+"Id": 0,"Email": "Carolanne_Kub@emmalee.name"}
 //}
 
 この章で扱う入力データの例は、全て@<list>{test_json}を使用しています。
@@ -44,10 +47,10 @@ fluentdがどのデータを読み取るのかをこのディレクティブで�
 //footnote[fluentd_tail][https://docs.fluentd.org/v0.12/articles/in_tail]
 
 @<code>{path}はどのファイルを取得対象とするか設定する箇所です。実装例では@<code>{/var/log/json}に存在するjsonファイルを全て取得する設定になっています。
-（当たり前かもしれませんが）@<code>{path}は必須設定です。
+@<code>{path}は必須設定です。
 
 @<code>{pos_file}はファイルをどこまで読み取ったか記録しておく@<code>{.pos}ファイルを
-どこに配置するのか設定しています。@<code>{path}と違って任意設定ですが、設定することを推奨されています。
+どこに配置か設定します。@<code>{path}と違って任意設定ですが、設定することが推奨されています。
 
 @<code>{format}は指定した形式にデータを整形します。こちらは必須設定です。
 
@@ -56,7 +59,7 @@ fluentdがどのデータを読み取るのかをこのディレクティブで�
 
 === データの送付部（match）
 処理が終わったデータをどこに送付するか指定するディレクティブです。
-プラグインを複数記述すれば、複数の出力先へデータを送付可能です。
+プラグインを複数記述すれば、複数の出力先へデータを送付できます。
 
 //list[fluentd_match][match部分の実装例]{
 <match>
@@ -98,10 +101,11 @@ fluentdがどのデータを読み取るのかをこのディレクティブで�
 //}
 
 //list[fluentd_output][test.csvの出力例（fluentd）]{
-"Sheldon Tillman","Peru","1980-11-13T17:37:36.702Z","0","Carolanne_Kub@emmalee.name"
+"Sheldon Tillman","Peru","1980-11-13T17:37:36.702Z",
+"0","Carolanne_Kub@emmalee.name"
 //}
 
-@<code>{""}を出力データから外したい場合、@<code>{<match>}部分に@<code>{force_quotes false}の設定を追加します。
+@<code>{""}を出力データから削除したい場合、@<code>{<match>}部分に@<code>{force_quotes false}の設定を追加します。
 
 
 == Logstash
@@ -123,7 +127,7 @@ Logstashがどのデータを読み取るのか、この部分で指定します
 //list[input_json_logstash][inputプラグインの実装例]{
 input {
   file {
-  path => "/var/log/json/*.json"
+  	path => "/var/log/json/*.json"
   }
 }
 //}
@@ -147,7 +151,7 @@ jsonファイルを全て取得する、という設定になっています。
 //list[filter_json_logstash][filterプラグインの実装例]{
   filter {
     json {
-     source => "message"
+     	source => "message"
    }
   }
 //}
@@ -183,12 +187,12 @@ output{
 //list[Logstash_example][Logstashのコンフィグ例まとめ]{
 input {
   file {
-  path => "/var/log/json/*.json"
+  	path => "/var/log/json/*.json"
     }
 }
 filter {
   json {
-   source => "message"
+  	source => "message"
  }
 }
 output{
@@ -204,71 +208,13 @@ output{
 入力データは@<list>{test_json}を参照してください。
 
 //list[Logstash_output][test.csvの出力例（Logstash）]{
-Sheldon Tillman,Peru,1980-11-13T17:37:36.702Z,0,Carolanne_Kub@emmalee.name
+Sheldon Tillman,Peru,1980-11-13T17:37:36.702Z,
+0,Carolanne_Kub@emmalee.name
 //}
 
 jsonデータがcsv形式に加工されていることがわかります。
 
-=== その他特徴など
-==== 複数のlogstash.confは両立できるが、注意が必要
-Logstashは取得するデータごとに@<code>{logstash.conf}を作成し、@<code>{/etc/logstash/conf.d}配下に置いて動作させることができます。
-
-//list[etc_logstash_conf][複数のコンフィグを作成し配置した例]{
-  ディレクトリの中を入れる
-//}
-
-ただし、Logstashは動作時にコンフィグを全て結合し動作するという特性があります。
-なので、各コンフィグ内では読み取ったデータにtag付けを行う処理を入れておかないと意図した処理ができない場合があります。
-
-//list[example_some_logstash_conf][複数のコンフィグを動作させる場合：tag付けを行わなかった場合]{
-
-
-//}
-
-このコンフィグを動作させると、データは次のように出力されます。
-
-//cmd{
-lsした後に起動＆データ重複されていることを確認
-//}
-
-なので、Logstashでも複数のデータを同じプロセスで取得する場合、tagをつけてデータを別々に管理する必要があります。
-ちなみに、コンフィグを1つにするか複数にするか、どちらがいいのかはElastic社の人も悩みどころらしいです。
-個人的には複数に分けて中身を短くする方が管理しやすそうに思いますが、ちょっとめんどいですね。長くてもめんどいのは一緒ですが。
-
-==== add_fieldとremove_field
-@<code>{add_field}とは、多くのfilterプラグインについているオプション機能です。
-取得したデータに1つfieldを追加できます（複数fieldの追加も可能です）。
-@<code>{remove_field}は逆で、指定したfieldを削除することができます。
-そのfieldに入っているデータは全部抹消されます。
-
-
-fieldの数を意図的に操作する、というのは他のElastic製品@<fn>{Elastic_Stack}（特にElasticsearch）との連携を
-意識しているものと思われます。Elasticsearchでデータを検索するときや、Kibanaでグラフを描画するときは
-field単位でデータを引っ張ってくる感じになるので、意図的にfield数を操作できるようにしているような感じがします。
-
-
-
-//footnote[Elastic_Stack][Elastic社製のOSS群はElastic Stackといいます。でもElasticsearch,Logstash,KibanaでELKって言ってる人の方が多いですね。そっちの方が短いし。]
-
-=== Logstashでお便利なプラグイン
-
-Logstashを運用する上でよく出てくるプラグインを紹介します。
-
-==== metrics（filter）
-取得したデータの数値型を変換できます。Logstashのバージョンが上がるほど、変換できる型が充実しています。
-公式ドキュメントをみると、その充実っぷりをご堪能いただけます。
-
-==== grok（filter）
-正規表現を使って、データを細かく分割できるプラグインです。例えばログに含まれるタイムスタンプを
-日付データとして使いたいときなどに役立ちます。
-○章以降で@micci184さんが使い方を紹介していますので、詳しくはそちらを参照ください。
-
-==== mutate（filter）
-指定した条件に一致するデータを変更できます。
-ただし、ある程度fieldを分割していないと狙った部分だけ変換、という処理がしにくいので
-前に紹介した@<code>{grok}filterをいかに活用し、データを分割できるかが勝負の分かれ目になります。
-
-==== stdout(output)
-動作確認時にも使用した@<code>{stdout}プラグインは、加工後のデータを標準出力させることが可能です。
-serviceコマンドでプロセス起動を行うと、@<code>{logstash.stdout}という名称で標準出力内容が保存されます。
-動作確認時に使用すると便利です。
+出力結果だけ比較すると、fluentdとLogstashで全く変わりないことがわかります。
+しかし、どの設定でデータを分割するかや、コンフィグに対する考え方が全く違うようですね。
+Logstashはデータの流れに沿ってコンフィグを記載するのに対し、fluentdはソフトウェアの動作も含めて
+まとめてコンフィグを書いているような印象を受けます。
