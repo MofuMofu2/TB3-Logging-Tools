@@ -14,7 +14,7 @@ Logstashを動かすには、confファイルという設定ファイルを読�
 
 === Logstashのディレクトリ構造
 Logstashの一部のディレクトリ構造について記載してますー
-　※RPMでLogstashをインストールしてます
+※RPMでLogstashをインストールしてます。
 
 /etc/logstash/
 ├ conf.d　(Logstashに実行させたいINPUT・FILTER・OUTPUTをディレクトリ配下に配置する)
@@ -136,7 +136,7 @@ $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
     "@timestamp" => 2017-10-01T05:33:29.689Z,
        "message" => "5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326"
 }
-}
+//}
 
 あれ？あれれ？？？
 ログがmessageにひとかたまりで入ってるではないですかΣ（￣Д￣;）

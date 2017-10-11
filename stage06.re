@@ -245,7 +245,7 @@ filter {
 output {
   stdout { codec => rubydebug }
 }
-}
+//}
 
 実行結果です。
 
@@ -294,7 +294,7 @@ output {
                        "proto" => "http",
                  "httpversion" => "1.1"
 }
-}
+//}
 
 如何でしたでしょうか？
 AWSのサービスに対してもログを取り込めるということがわかったのではないでしょうか(dﾟωﾟd)ｵｩｲｪｰ

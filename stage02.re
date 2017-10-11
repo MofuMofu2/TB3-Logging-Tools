@@ -29,8 +29,11 @@ Logstashは、Elasticsearch社が提供するオープンソースログ収集�
 
 LogstashのINPUTS・FILTERS・OUTPUTSの3層構造を以下の図で表すことができます。
 
-//image[stage02-01][Logstashの構造][scale=0.5]{
+//image[stage02-01][Logstashの構造#01]{
   Logstashの構造の図を追加
+//}
+
+//image[stage02-02][Logstashの構造#02]{
 //}
 
 

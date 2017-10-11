@@ -8,7 +8,7 @@
 また、FireWallという括りでCISCOのASAのGrokPatternが用意されているものもあります。
 ただ、すべてがまかなえてるかと言うとまかなえてないです。
 
-なので、今回はCISCOのファイアウォール製品であるASAのログを取り込みたいと思いますー
+なので、今回はCiscoのファイアウォール製品であるASAのログを取り込みたいと思いますー
 やっぱり企業を守っているファイアウォールがどんなログを出しているか気になりますよね！？（薄っぺらいw）
 あ、でも使えるGrokPatternは積極的に使います！
 当たり前ですが、"あるものは使う！"、"ないものは作る！"という心得でいきましょー
@@ -171,7 +171,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 
 実行結果は以下です！
 
-//image[stage05-01][ASA Grok Constructor結果#01][scale=0.5]{
+//image[stage05-01][ASA Grok Constructor結果#01]{
   Grok Constructor
 //}
 
@@ -192,14 +192,14 @@ $ vim patterns/asa_patterns
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
 CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
-}
+//}
 
 これでパターンファイルの準備は完了です。
 
 補足ですが、パターンファイルをGrok Constructorでテストすることも可能です。
 実際に作成したパターンファイルでテストを実施した結果です。
 
-//image[stage05-02][ASA Grok Constructor結果#02][scale=0.5]{
+//image[stage05-02][ASA Grok Constructor結果#02]{
   Grok Constructor
 //}
 

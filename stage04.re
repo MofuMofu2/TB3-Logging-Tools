@@ -114,7 +114,7 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 これらを図にすると以下です。
 
-//image[stage04-01][IPアドレスをGrokするイメージ図#01][scale=0.5]{
+//image[stage04-01][IPアドレスをGrokするイメージ図#01]{
   Grok説明図
 //}
 
@@ -129,7 +129,7 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 Grok Constructorの使い方を以下の図で解説したいと思います。
 
-//image[stage04-02][Grok Constructorでテスト#01][scale=0.5]{
+//image[stage04-02][Grok Constructorでテスト#01]{
   Grok Constructor
 //}
 
@@ -138,7 +138,7 @@ Grok Constructorの使い方を以下の図で解説したいと思います。
 
 === clientip
 
-//image[stage04-03][Grok Constructorでテスト#02][scale=0.5]{
+//image[stage04-03][Grok Constructorでテスト#02]{
   Grok Constructor
 //}
 
@@ -153,7 +153,7 @@ Grok Constructorの使い方を以下の図で解説したいと思います。
 先ほどの様に、上記のGrokPatternでGrok Constructorでテストを実施するとIPアドレスが引っかかると思います。
 なので、%{IPORHOST:clientip}を含んでテストを実施してみてください。
 
-//image[stage04-04][Grok Constructorでテスト#03][scale=0.5]{
+//image[stage04-04][Grok Constructorでテスト#03]{
   Grok Constructor
 //}
 
@@ -175,7 +175,7 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 なので、こちらを使用してGrok Constructorでテストしてみたいと思います。
 先ほど作成したGrok Constructorに連ねてきましょー
 
-//image[stage04-05][Grok Constructorでテスト#04][scale=0.5]{
+//image[stage04-05][Grok Constructorでテスト#04]{
   Grok Constructor
 //}
 
@@ -185,7 +185,7 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 なので、以下の図で示している通り、"[]"を取り除く必要があるのです！
 無効化するにはエスケープ\（バックスラッシュ）を使用します。
 
-//image[stage04-06][IPアドレスをGrokするイメージ図#02][scale=0.5]{
+//image[stage04-06][IPアドレスをGrokするイメージ図#02]{
   Grok
 //}
 
@@ -222,7 +222,7 @@ NOTSPACEは、空白文字以外にマッチのため、空白文字が出現す
 
 てことで、ここまでを以下の図にまとめましたーヽ(*ﾟдﾟ)ノ
 
-//image[stage04-07][IPアドレスをGrokするイメージ図#03][scale=0.5]{
+//image[stage04-07][IPアドレスをGrokするイメージ図#03]{
   Grokパワポ
 //}
 
@@ -240,7 +240,7 @@ responseは、ステータスコードなので、NUMBERを使用します。
 
 * %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
 
-//image[stage04-08][Grok Constructorでテスト#04][scale=0.5]{
+//image[stage04-08][Grok Constructorでテスト#04]{
   Grok Constructor
 //}
 
@@ -263,7 +263,7 @@ $ mkdir patterns
 ### GrokPattern名をHTTPD_COMMON_LOGとします
 $ vim patterns/httpd_patterns
 HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
-}
+//}
 
 次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。
 
@@ -283,7 +283,7 @@ filter {
 output {
   stdout { codec => rubydebug }
 }
-}
+//}
 
 それでは、実行してみますー
 
@@ -306,7 +306,7 @@ $ usr/share/logstash/bin/logstash -f conf.d/test02.conf
     "httpversion" => "1.0",
       "timestamp" => "10/Oct/2000:13:55:36 -0700"
 }
-}
+//}
 
 おぉ！いい感じにフィールドが抽出できたーヾ(´Д｀)ノｲｴｰｲ
 が、しかし、コレでは足りない！
@@ -341,11 +341,11 @@ filter {
 }
 output {
   stdout { codec => rubydebug }
-}
+//}
 
 各々のフィルターについて図と合わせて説明します。
 
-//image[stage04-09][Logstash.confの説明][scale=0.5]{
+//image[stage04-09][Logstash.confの説明]{
   Logstash.conf
 //}
 
@@ -393,7 +393,7 @@ output {
        "@version" => "1",
     "httpversion" => "1.0",
 }
-}
+//}
 
 
 これでGrokを利用してApacheアクセスログを抽出できるようになりましたね！
@@ -406,6 +406,6 @@ output {
 Grok Constructorで、作成したGrokPatternをテストすることも可能です。
 以下の図にあるとおりにテストして頂ければと思います。
 
-//image[stage04-10][Grok Constructorでテスト#05][scale=0.5]{
+//image[stage04-10][Grok Constructorでテスト#05]{
   Grok Constructor
 //}

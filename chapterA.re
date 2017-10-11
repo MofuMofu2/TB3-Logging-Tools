@@ -15,7 +15,7 @@
 代表的なサービス例としては、Kibana,Grafanaなどがあります。
 この本では詳しく扱いませんが、Kibanaによるデータの可視化を行った画面を一例として載せておきます。
 
-//image[example_kibana][データ可視化ツール（Kibana）の例][scale=0.5]{
+//image[example_kibana][データ可視化ツール（Kibana）の例]{
   KibanaのDashboardを挿入
 //}
 
@@ -55,7 +55,7 @@ fluentdよりもLogstashの方が世界的に使われていると言えそう�
 棒グラフ左は横線グラフ上と対応しています。白黒だと少しわかりづらいかもしれませんので、実際にGoogle Trendsで
 検索してみると面白いと思います。
 
-//image[google_trends][Logstashとfluentdの検索数比較][scale=0.3]{
+//image[google_trends][Logstashとfluentdの検索数比較]{
 //}
 
 
