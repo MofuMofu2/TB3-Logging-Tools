@@ -1,20 +1,20 @@
 = 比較その3：色々な観点から
 
 簡単ではありますが、fluentdとLogstashを動作させることができました。
-なので、様々な観点から2つのソフトウェアを比較してみました。
+なので、様々な観点から2つのソフトウェアを比較してみます。
 
 
 //table[difference_software][fluentdとLogstashの違いまとめ]{
-比較観点                fluentd     Logstash
+比較観点	fluentd	Logstash
 ------------------------------------------
-気楽に始められる度          ◯           △
-ドキュメントの親切度      ◯           △
-ログのわかりやすさ        ◯          △
-Windowsとの相性         △          ◯
-Beatsとの相性           △          ◯
-改行があるデータを扱えるか   ◯         ◯
-インターネット必須度        ◯         ◯
-アップデートの速さ          △        ◯
+気楽に始められる度	◯	△
+ドキュメントの親切度	◯	△
+ログのわかりやすさ	◯	△
+Windowsとの相性	△	◯
+Beatsとの相性	△	◯
+改行があるデータを扱えるか	◯	◯
+インターネット必須度	◯	◯
+アップデートの速さ	△	◯
 //}
 
 == 気楽に始められる度
@@ -38,21 +38,30 @@ Logstashのドキュメントは実装例は少し記載があるものの、ど
 == ログのわかりやすさ
 これも完全なる独断と偏見ですが、fluendの方が圧倒的にわかりやすいです。
 同じ原因のエラーログを並べて比較してみます。
-どちらもcsvファイルの列となる文字列を設定し忘れたときのエラーです。
+どちらもcsvファイルの列となる文字列を設定し忘れたときのエラーです。これも紙面の都合上、適宜改行を入れています。
 
 //list[fluentd_error][fluentdのエラーログ]{
-Starting td-agent: 2017-10-08 10:15:48 +0900 [error]: fluent/supervisor.rb:373:rescue in main_process: config error file="/etc/td-agent/td-agent.conf" error="'fields' parameter is required"
+Starting td-agent: 2017-10-08 10:15:48 +0900
+[error]: fluent/supervisor.rb:373:rescue in main_process:
+config error file="/etc/td-agent/td-agent.conf" error="'fields' parameter is required"
 td-agent                                                   [FAILED]
 //}
 
 原因が簡潔にまとまっていてわかりやすいです。
 
 //list[Logstash_error][Logstashのエラーログ]{
-[2017-10-01T13:12:22,348][INFO ][logstash.modules.scaffold] Initializing module {:module_name=>"fb_apache", :directory=>"/usr/share/logstash/modules/fb_apache/configuration"}
-[2017-10-01T13:12:22,352][INFO ][logstash.modules.scaffold] Initializing module {:module_name=>"netflow", :directory=>"/usr/share/logstash/modules/netflow/configuration"}
-[2017-10-01T13:12:22,578][WARN ][logstash.config.source.multilocal] Ignoring the 'pipelines.yml' file because modules or command line options are specified
-[2017-10-01T13:12:22,962][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
-[2017-10-01T13:12:23,399][ERROR][logstash.outputs.csv     ] Missing a required setting for the csv output plugin:
+[2017-10-01T13:12:22,348][INFO ][logstash.modules.scaffold]
+Initializing module {:module_name=>"fb_apache", :
+directory=>"/usr/share/logstash/modules/fb_apache/configuration"}
+[2017-10-01T13:12:22,352][INFO ][logstash.modules.scaffold]
+Initializing module {:module_name=>"netflow",
+:directory=>"/usr/share/logstash/modules/netflow/configuration"}
+[2017-10-01T13:12:22,578][WARN ][logstash.config.source.multilocal]
+Ignoring the 'pipelines.yml' file because modules or command line options are specified
+[2017-10-01T13:12:22,962][INFO ][logstash.agent           ]
+Successfully started Logstash API endpoint {:port=>9600}
+[2017-10-01T13:12:23,399][ERROR][logstash.outputs.csv     ]
+Missing a required setting for the csv output plugin:
 
   output {
     csv {
@@ -60,7 +69,9 @@ td-agent                                                   [FAILED]
       ...
     }
   }
-[2017-10-01T13:12:23,401][ERROR][logstash.agent           ] Failed to execute action {:action=>LogStash::PipelineAction::Create/pipeline_id:main, :exception=>"LogStash::ConfigurationError", :message=>"Something is wrong with your configuration."}
+[2017-10-01T13:12:23,401][ERROR][logstash.agent           ]
+Failed to execute action {:action=>LogStash::PipelineAction::Create/pipeline_id:main,
+	:exception=>"LogStash::ConfigurationError", :message=>"Something is wrong with your configuration."}
 # この1セットが延々と出力される
 //}
 
@@ -68,16 +79,18 @@ Logstashはデータの読み取りごとにエラーログが出力されます
 だいたい2000行くらいログが一度に出てくるので、ログを読むのは意外と大変です…。
 @<code>{ERROR}の文字列でgrepをかけることをおすすめします。
 
-fluentdはサービス起動時に何かしらのエラーがあるとエラーログを標準出力して動作を停止しますが、Logstashはエラーがあっても一旦サービス起動します。
+fluentdはサービス起動時に何かしらのエラーがあるとエラーログを標準出力して動作を停止しますが、Logstashはエラーがあっても一旦サービスが起動します。
 その後@<code>{logstash.log}にエラーを出力してサービスを停止します。
 エラー時の動作は、やはりfluentdの方が親切だと思います。
 
 また、fluentdはinfoのログも親切です。
 
 //list[fluentd_info][td-agent.logの抜粋]{
-2017-10-08 13:43:27 +0900 [info]: reading config file path="/etc/td-agent/td-agent.conf"
+2017-10-08 13:43:27 +0900 [info]:
+reading config file path="/etc/td-agent/td-agent.conf"
 # 省略
-2017-10-08 13:43:27 +0900 [info]: using configuration file: <ROOT>
+2017-10-08 13:43:27 +0900 [info]:
+using configuration file: <ROOT>
   <match>
     @type file
     path /var/log/csv/test.csv
@@ -93,9 +106,12 @@ fluentdはサービス起動時に何かしらのエラーがあるとエラー�
     tag json
   </source>
 </ROOT>
-2017-10-08 13:43:27 +0900 [info]: following tail of /var/log/json/test.json
-2017-10-08 13:43:55 +0900 [info]: detected rotation of /var/log/json/test.json; waiting 5 seconds
-2017-10-08 13:43:55 +0900 [info]: following tail of /var/log/json/test.json
+2017-10-08 13:43:27 +0900 [info]:
+following tail of /var/log/json/test.json
+2017-10-08 13:43:55 +0900 [info]:
+detected rotation of /var/log/json/test.json; waiting 5 seconds
+2017-10-08 13:43:55 +0900 [info]:
+following tail of /var/log/json/test.json
 //}
 
 自分のコンフィグの設定・データの読み取り対象などが動作ログとして出力されます。
