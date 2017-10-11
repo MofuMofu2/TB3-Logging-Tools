@@ -73,11 +73,11 @@ ASDM（Webベースの管理インターフェースを提供するツール）�
  ** status: started (string)
 
 実際のログに記載されているメッセージ内容のすべてが、フィールドにマッピングされていないことがわかります。
-例えば、@@<code>{ASDM session number}というメッセージに対して意味はなく、そのセッションナンバーが知りたいのです。
+例えば、@<code>{ASDM session number}というメッセージに対して意味はなく、そのセッションナンバーが知りたいのです。
 そのため、フィールド名に@<code>{ASDM session number}とし、値としては取り込まないようにします。
-その他の@@<code>{from}も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、@@<code>{src_ip}（ソースIP）というフィールドにIPアドレスを値として取り込みたいと思います。
+その他の@<code>{from}も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、@<code>{src_ip}（ソースIP）というフィールドにIPアドレスを値として取り込みたいと思います。
 
-次のログですが、最後の@@<code>{ended}しか変わらないということがわかります。
+次のログですが、最後の@<code>{ended}しか変わらないということがわかります。
 なので、先ほどのフィールド定義をそのまま使用するので割愛します。
 
 //list[stage05-list04][これなんですかね？]{
@@ -96,15 +96,15 @@ Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254
 タイプスタンプとホスト名、イベントIDはすべてのログに入るメッセージのため、共通部分とします。
 それでは、タイムスタンプとホスト名、イベントIDに取り掛かりたいと思います！
 
-タイムスタンプは、GrokPatternに @@<code>{CISCOTIMESTAMP}を使用します。
+タイムスタンプは、GrokPatternに @<code>{CISCOTIMESTAMP}を使用します。
 
 //list[stage05_list06][CISCOTIMESTAMPのGrokPattern]{
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 //}
 
 
-また、ホスト名は、ユーザが自由に付与する名前のため、柔軟性を求めて@@<code>{NOTSPACE}を使用します。
-また、先頭にスペースが必ず入るので@@<code>{\s}を入れます。
+また、ホスト名は、ユーザが自由に付与する名前のため、柔軟性を求めて@<code>{NOTSPACE}を使用します。
+また、先頭にスペースが必ず入るので@<code>{\s}を入れます。
 
 
 //list[stage05_list07][HOSTNAMEのGrokPattern]{
@@ -146,13 +146,13 @@ ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
 
 
 これも見てわかる通り、CustomPatternで作成しています。
-一つ一つみていくと@@<code>{(?)}の外に@@<code>{ASDM session nubber}がありますね。
+一つ一つみていくと@<code>{(?)}の外に@<code>{ASDM session nubber}がありますね。
 これは、@<code>{ASDM session nubber}をマッチしても値は取得したくない場合に使うやり方です。
-なので、隣の@@<code>{(?<ASDM-session-number>\s[0-9]+)}というCustomPatternで取得した値が
-@@<code>{ASDM-session-number}というフィールドに入ります。
-正規表現部分は、@@<code>{\s}のスペースと@@<code>{0-9}の数字が複数並んでも対応できるように@@<code>{+}を使用してます。
+なので、隣の@<code>{(?<ASDM-session-number>\s[0-9]+)}というCustomPatternで取得した値が
+@<code>{ASDM-session-number}というフィールドに入ります。
+正規表現部分は、@<code>{\s}のスペースと@<code>{0-9}の数字が複数並んでも対応できるように@<code>{+}を使用してます。
 
-最終的に先頭の@@<code>{:}とスペースも含むので以下な感じになります。
+最終的に先頭の@<code>{:}とスペースも含むので以下な感じになります。
 
 //list[stage05_list11][ASDMセッションNoのGrokPattern（完成版）]{
 :\sASDM session number(?<ASDM-session-number>\s[0-9]+)
@@ -168,18 +168,18 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 * from 192.168.1.254
 #@#これはなくてもいいんじゃないか？listにするならstage05_list12
 
-これは、フィールド定義で説明したようにソースIPなので、GrokPatternの@@<code>{IP}を使用し、不要な部分を取り除く必要があります。
-スペースと@@<code>{from}が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
+これは、フィールド定義で説明したようにソースIPなので、GrokPatternの@<code>{IP}を使用し、不要な部分を取り除く必要があります。
+スペースと@<code>{from}が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
 
 //list[stage05_list13][ソースIPアドレスのGrokPattern]{
 (\sfrom\s%{IP:src_ip})
 //}
 
 === ステータス
-最後はセッションステータスを表す@@<code>{started}ですね。
+最後はセッションステータスを表す@<code>{started}ですね。
 これは、CustomPatternで対応します。
-先ほどのソースIPとの間にスペースがあるので@@<code>{s}を入れます。
-また、@<code>{started}は文字列なので@@<code>{\b}を入れて以下な感じです。
+先ほどのソースIPとの間にスペースがあるので@<code>{s}を入れます。
+また、@<code>{started}は文字列なので@<code>{\b}を入れて以下な感じです。
 
 //list[stage05_list14][セッションステータスのGrokPattern]{
 \s(?<session>\bstarted)
@@ -194,7 +194,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 //}
 
 
-@@<code>{|}を入れることで選択できるようになります。
+@<code>{|}を入れることで選択できるようになります。
 これで整ったので、GrokConstructorでテストをしてみたいと思います。
 
 
@@ -242,7 +242,7 @@ CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)
 これでパターンファイルの準備は完了です。
 
 補足ですが、パターンファイルをGrok Constructorでテストすることも可能です。
-@@<img>{stage05-02}は実際に作成したパターンファイルでテストを実施した結果です。
+@<img>{stage05-02}は実際に作成したパターンファイルでテストを実施した結果です。
 
 //image[stage05-02][ASA Grok Constructor結果#02]{
   Grok Constructor
