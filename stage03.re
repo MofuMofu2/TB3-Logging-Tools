@@ -1,19 +1,19 @@
 = Logstashに触れてみる
 == 環境について
 Logstash6.0betaがすでにインストールされていることを前提とします。
-インストール方法は第4章を参考にして頂ければと思います！@@<fn>{stage03_fn01}
+インストール方法は第4章を参考にして頂ければと思います！@<fn>{stage03_fn01}
 
 //footnote[stage03_fn01][決してサボってるわけじゃないですよwページの有効活用]
 
 == 動かす前のLogstash準備
 早速ですが、Logstashを動かしたいと思います！
 
-Logstashを動かすには、@@<code>{logstash.conf}（以降confファイルとします）という設定ファイルを読み込ませる必要があります。
+Logstashを動かすには、@<code>{logstash.conf}（以降confファイルとします）という設定ファイルを読み込ませる必要があります。
 このconfファイルにINPUT・FILTER・OUTPUTを定義すると、Logstashが処理を実行します。
 
 
 === Logstashのディレクトリ構造
-Logstashの設定ファイルは@@<code>{/etc/logstash}に集約されています。@<list>{stage03_list01}で
+Logstashの設定ファイルは@<code>{/etc/logstash}に集約されています。@<list>{stage03_list01}で
 ディレクトリ構造と配置されているファイルの内容について記載しています。今回はrpmパッケージを使ってLogstashをインストールしてます。
 
 //list[stage03_list01][/etc/logstashのディレクトリ構造]{
@@ -28,8 +28,8 @@ Logstashの設定ファイルは@@<code>{/etc/logstash}に集約されていま�
 
 
 === confファイルの配置場所について
-Logstashは、@@<code>{logstash.yml}64行目に記載されているファイルをconfファイルとして読み込みます。
-@@<list>{stage03_list02}をみてわかるとおり、@@<code>{*.conf}となっているため、作成するconfファイルの拡張子は@@<code>{.conf}とします。
+Logstashは、@<code>{logstash.yml}64行目に記載されているファイルをconfファイルとして読み込みます。
+@<list>{stage03_list02}をみてわかるとおり、@<code>{*.conf}となっているため、作成するconfファイルの拡張子は@<code>{.conf}とします。
 この設定は変更する理由が特にないので、デフォルト設定のままとします。
 
 //list[stage03_list02][logstash.ymlの64行目]{
@@ -40,7 +40,7 @@ path.config: /etc/logstash/conf.d/*.conf
 === confファイルの準備
 Logstashを動かす前に簡単なconfファイルを作成します。
 confファイルの名前は、test01.confとします。
-また、confファイルの配置先は@@<code>{/etc/logstash/}です。
+また、confファイルの配置先は@<code>{/etc/logstash/}です。
 
 //list[stage03_list03][test01.conf]{
 input {
@@ -54,7 +54,7 @@ output {
 
 
 == 動かすよ！Logstash
-Logstashの起動スクリプトは@@<code>{/usr/share/logstash/bin/}に配置されています。
+Logstashの起動スクリプトは@<code>{/usr/share/logstash/bin/}に配置されています。
 
 //list[stage03_list04][Logstashの起動スクリプト]{
 /usr/share/logstash/bin/logstash
@@ -62,7 +62,7 @@ Logstashの起動スクリプトは@@<code>{/usr/share/logstash/bin/}に配置�
 
 Logstashをサービス起動で実行させることもできます。
 しかし今回はテストとして動かしたいため、今回は起動スクリプトを使ってLogstashを起動します。
-オプションとして@@<code>{-f}をつけて、引数にconfファイルを指定します。
+オプションとして@<code>{-f}をつけて、引数にconfファイルを指定します。
 
 では、早速実行してみます。
 
@@ -82,8 +82,8 @@ Hello
 }
 //}
 
-@@<code>{message}という箇所にHelloの文字が入っていますね！
-この@@<code>{message}の部分は@@<code>{field（フィールド）}といいます。
+@<code>{message}という箇所にHelloの文字が入っていますね！
+この@<code>{message}の部分は@<code>{field（フィールド）}といいます。
 これでLogstashの環境が整いましたーヽ(*ﾟдﾟ)ノ
 
 
@@ -93,8 +93,8 @@ Hello
 それでは早速ですが、ApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
 Nginxでもいいんですけど、Google Trendsで"Apache VS Nginx"やってみたら、Apacheに軍配が上がったので、Apacheにしました。
 
-今回は@@<list>{stage03_list05}アクセスログで試していきたいと思いますー
-Apacheのログフォーマットは、@@<code>{common}とします。
+今回は@<list>{stage03_list05}アクセスログで試していきたいと思いますー
+Apacheのログフォーマットは、@<code>{common}とします。
 
 #@#Apacheのアクセスログはcommonフォーマットを使った、という解釈ですがあってますか？
 
@@ -109,12 +109,12 @@ Apacheのログフォーマットは、@@<code>{common}とします。
 === アクセスログを取り込むための準備
 では、さっきの要領でLogstashを動かしてみるよ！
 まずは、先ほど同様にtest02.confという名前でconfファイルを作成します。
-配置先は先ほどと同様に@@<code>{/etc/logstash}とします。
+配置先は先ほどと同様に@<code>{/etc/logstash}とします。
 
-このtest02.confですが、inputに@@<code>{file}プラグインを記載しています。
+このtest02.confですが、inputに@<code>{file}プラグインを記載しています。
 このプラグインは、インプットデータとしてファイルを指定できます。
-また、ログファイルを読み込み方式指定のため、@@<code>{start_position}オプションを利用してます。
-デフォルト設定では@@<code>{end}ですが、Logstashが起動されてから追記されたログを取り込み対象としたいので、@@<code>{beginning}を定義してます。
+また、ログファイルを読み込み方式指定のため、@<code>{start_position}オプションを利用してます。
+デフォルト設定では@<code>{end}ですが、Logstashが起動されてから追記されたログを取り込み対象としたいので、@<code>{beginning}を定義してます。
 その他にもオプションがあるので、詳しくは公式サイトのドキュメント（@<href>{https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html}）を参照してください。
 
 
@@ -158,7 +158,7 @@ $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
 //}
 
 あれ？あれれ？？？
-ログが@@<code>{massage}にひとかたまりで入ってるではないですかΣ（￣Д￣;）
+ログが@<code>{massage}にひとかたまりで入ってるではないですかΣ（￣Д￣;）
 これはあかん。。
 IPアドレス、バージョン、ステータスコードとかが別々にfieldに入っているのが理想だったのに。。Orz
 
