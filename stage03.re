@@ -1,73 +1,78 @@
 = Logstashに触れてみる
 == 環境について
 Logstash6.0betaがすでにインストールされていることを前提とします。
-インストール方法については、りまりま団のもふもふ（Twitter:@froakie0021）に記載してあるので、そちらを参考にして頂ければと思います！
-（決してサボってるわけじゃないですよwページの有効活用）
+インストール方法は第4章を参考にして頂ければと思います！@@<fn>{stage03_fn01}
 
+//footnote[stage03_fn01][決してサボってるわけじゃないですよwページの有効活用]
 
 == 動かす前のLogstash準備
 早速ですが、Logstashを動かしたいと思います！
 
-Logstashを動かすには、confファイルという設定ファイルを読み込ませる必要があります。
-このconfファイルにINPUT・FILTER・OUTPUTの定義することで、Logstashが実行します。
+Logstashを動かすには、@@<code>{logstash.conf}（以降confファイルとします）という設定ファイルを読み込ませる必要があります。
+このconfファイルにINPUT・FILTER・OUTPUTを定義すると、Logstashが処理を実行します。
 
 
 === Logstashのディレクトリ構造
-Logstashの一部のディレクトリ構造について記載してますー
-※RPMでLogstashをインストールしてます。
+Logstashの設定ファイルは@@<code>{/etc/logstash}に集約されています。@<list>{stage03_list01}で
+ディレクトリ構造と配置されているファイルの内容について記載しています。今回はrpmパッケージを使ってLogstashをインストールしてます。
 
+//list[stage03_list01][/etc/logstashのディレクトリ構造]{
 /etc/logstash/
 ├ conf.d　(Logstashに実行させたいINPUT・FILTER・OUTPUTをディレクトリ配下に配置する)
 ├ jvm.options (ヒープサイズの割り当てなどを定義する)
 ├ log4j2.properties (ロギング設定)
 ├ logstash.yml (Logstashの設定ファイル)
 └ startup.options (Logstash起動設定)
+//}
+
 
 
 === confファイルの配置場所について
-logstashがconf.dを読み込みにいくのは、logstash.ymlの64行目に記載してあるためです。
-設定内容をみてわかるとおり、*.confとなっているため、先ほど作成したtest01も.confとしているのです。
-変更する理由がないので、デフォルト設定とします。
+Logstashは、@@<code>{logstash.yml}64行目に記載されているファイルをconfファイルとして読み込みます。
+@@<list>{stage03_list02}をみてわかるとおり、@@<code>{*.conf}となっているため、作成するconfファイルの拡張子は@@<code>{.conf}とします。
+この設定は変更する理由が特にないので、デフォルト設定のままとします。
 
-//cmd{
-$ vim logstash.yml
-### 64行目
-64 path.config: /etc/logstash/conf.d/*.conf
+//list[stage03_list02][logstash.ymlの64行目]{
+path.config: /etc/logstash/conf.d/*.conf
 //}
 
 
 === confファイルの準備
 Logstashを動かす前に簡単なconfファイルを作成します。
 confファイルの名前は、test01.confとします。
-また、カレントディレクトリは/etc/logstash/です。
+また、confファイルの配置先は@@<code>{/etc/logstash/}です。
 
-
-//cmd{
-$ vim conf.d/test01.conf
+//list[stage03_list03][test01.conf]{
 input {
   stdin {}
 }
 output {
   stdout { codec => rubydebug }
 }
+
 //}
 
 
 == 動かすよ！Logstash
-logstashの起動スクリプトは以下に配置されてます。
+Logstashの起動スクリプトは@@<code>{/usr/share/logstash/bin/}に配置されています。
 
-* Logstash起動スクリプト
-** /usr/share/logstash/bin/logstash
+//list[stage03_list04][Logstashの起動スクリプト]{
+/usr/share/logstash/bin/logstash
+//}
 
-logstashをサービス起動で実行させることも可能なのですが、テストとして動かしたいため、今回は起動スクリプトから実行します。
+Logstashをサービス起動で実行させることもできます。
+しかし今回はテストとして動かしたいため、今回は起動スクリプトを使ってLogstashを起動します。
+オプションとして@@<code>{-f}をつけて、引数にconfファイルを指定します。
 
 では、早速実行してみます。
 
 //cmd{
-$ /usr/share/logstash/bin/logstash -f conf.d/test01
-###　実行すると入力を待ってるぜ！って言われるので
+$ /usr/share/logstash/bin/logstash -f conf.d/test01.conf
+
+# 実行すると入力を待ってるぜ！って言われるので
 The stdin plugin is now waiting for input:
-### Helloと入力
+
+# Helloと入力
 Hello
 {
       "@version" => "1",
@@ -77,34 +82,43 @@ Hello
 }
 //}
 
-Helloと入力したらmessageというフィールドに入ってますね！
+@@<code>{message}という箇所にHelloの文字が入っていますね！
+この@@<code>{message}の部分は@@<code>{field（フィールド）}といいます。
 これでLogstashの環境が整いましたーヽ(*ﾟдﾟ)ノ
 
 
-== とりま。Apacheのアクセスログを取り込んでみよう
-それでは早速ですが、
-ApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
-Nginxでもいいんですけど、Googleトレンドで"Apache VS Nginx"やってみたら、Apacheに軍配が上がったので、Apacheにしました。
+== Apacheのアクセスログを取り込む
+#@#ページ上の方みて欲しいんですが、章と節の見出しが被ってしまったのでタイトル変えました…すまぬ。
 
-以下のサンプルのアクセスログで試していきたいと思いますー
-ログフォーマットは、commonを利用します。
+それでは早速ですが、ApacheのアクセスログをLogstashで取り込んで、ごにょごにょしてみたいと思いますー
+Nginxでもいいんですけど、Google Trendsで"Apache VS Nginx"やってみたら、Apacheに軍配が上がったので、Apacheにしました。
+
+今回は@@<list>{stage03_list05}アクセスログで試していきたいと思いますー
+Apacheのログフォーマットは、@@<code>{common}とします。
+
+#@#Apacheのアクセスログはcommonフォーマットを使った、という解釈ですがあってますか？
+
 あとあと、5.10.83.30のグローバルIPはElastic社のグローバルIPを使わせて頂いてますm(_ _)m
 
-* 5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+//list[stage03_list05][Apacheのアクセスログ（サンプル）]{
+5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+//}
+
+
 
 === アクセスログを取り込むための準備
 では、さっきの要領でLogstashを動かしてみるよ！
-まずは、先ほど同様にtest02.confというファイルを作成します。
-また、ログファイルの格納場所も用意します。
+まずは、先ほど同様にtest02.confという名前でconfファイルを作成します。
+配置先は先ほどと同様に@@<code>{/etc/logstash}とします。
 
-//cmd{
-### ログディレクトリとサンプルログを配置
-$ mkdir log
-$ vim log/httpd_access.log
-5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+このtest02.confですが、inputに@@<code>{file}プラグインを記載しています。
+このプラグインは、インプットデータとしてファイルを指定できます。
+また、ログファイルを読み込み方式指定のため、@@<code>{start_position}オプションを利用してます。
+デフォルト設定では@@<code>{end}ですが、Logstashが起動されてから追記されたログを取り込み対象としたいので、@@<code>{beginning}を定義してます。
+その他にもオプションがあるので、詳しくは公式サイトのドキュメント（@<href>{https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html}）を参照してください。
 
-### test02.confを作成
-$ vim conf.d/test02.conf
+
+//list[stage03_list06][test02.conf]{
 input {
   file {
     path => "/etc/logstash/log/httpd_access.log"
@@ -116,18 +130,23 @@ output {
 }
 //}
 
-今回作成したtest02.confですが、inputにfileというプラグインを記載してます。
-このプラグインは、インプットデータとしてファイルを指定することができます。
-また、ログファイルを読み込み指定をするために"start_position"のオプションを利用してます。
-デフォルトだとendですが、logstashが起動されてから追記されたログを取り込み対象としたいので、biginningを定義してます。
-その他にもオプションがあるので、詳しくは公式サイトの（File input plugin:@<href>{https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html}）を参照してください。
-
-
-=== アクセスログを取り込むよ！
-先ほど、準備したconfファイルを使用してログを取り込んでいきたいと思いますー
-ではでは、早速実行します！
+次にログファイルの格納場所を作成し、ログを配置します。
+#@#これは/etc配下？
 
 //cmd{
+# ログディレクトリとサンプルログを配置
+$ mkdir log
+$ vim log/httpd_access.log
+5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+//}
+
+=== アクセスログを取り込むよ！
+それでは作成したconfファイルを使用してログを取り込んでいきたいと思いますー。
+
+ではでは、早速実行します！test01.confのときと同様に、起動スクリプトを使ってLogstashを起動します。
+
+//cmd{
+# test02.confを引数にLogstashを起動
 $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
 {
       "@version" => "1",
@@ -139,12 +158,16 @@ $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
 //}
 
 あれ？あれれ？？？
-ログがmessageにひとかたまりで入ってるではないですかΣ（￣Д￣;）
+ログが@@<code>{massage}にひとかたまりで入ってるではないですかΣ（￣Д￣;）
 これはあかん。。
-理想は、IPアドレス、バージョン、ステータスコードとかが各フィールドに入っているはずだったのに。。Orz
+IPアドレス、バージョン、ステータスコードとかが別々にfieldに入っているのが理想だったのに。。Orz
+
+#@#これもこの解釈であっているのか…
 
 
 そうなのです。
 このままだと意味のないデータとして取り込まれてしまいます。
+#@#なんで意味がないのか説明があった方がいいです。「データ分析をするときにデータを個別に処理することができず、集計もままなりません」みたいな感じで。
 そこでLogstashのFILTERを利用することで、フィールドを識別し、意味のある結果にさせたいと思います。
-てことで、次章は、アクセスログを綺麗に取り込むための方法について書き書きしていきますーヽ(*ﾟдﾟ)ノ
+#@#データを個別に分割し、再利用しやすい形に整形しますって理解であってますか？ちょっとわからなかった…。
+てことで、次の章はアクセスログを綺麗に取り込むための方法について書き書きしていきますーヽ(*ﾟдﾟ)ノ
