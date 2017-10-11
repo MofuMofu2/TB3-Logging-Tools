@@ -19,19 +19,20 @@
 
 
 === ログフォーマットを調べる
-今回取り込むログは、Apacheのログフォーマットのcommonを対象にします。
-Apacheのサイトからログフォーマットについて調べると色々と記載されてます。
+ログは引き続き@<list>{stage03_list05}を使用します。
+Apacheのサイトにはログのフォーマットが詳細に記載されてます。
+#@#URLあるとよい。追記するなら@<href>{URL}
 
-Apacheのアクセスログのログフォーマットは以下な感じです。
+Apacheのアクセスログのログフォーマットは次のような感じで構成されています。
 
-* LogFormat "%h %l %u %t \"%r\" %>s %b" common
-** %h: サーバへリクエストしたクライアントIP
-** %l: クライアントのアイデンティティ情報ですが、デフォルト取得しない設定になっているため、”-”（ハイフン）で表示される
-** %u: HTTP認証によるリクエストしたユーザID（認証していない場合は、"-"）
-** %t: サーバがリクエストを受け取った時刻
-** \"%r\": メソッド、パス、プロトコルなど
-** %>s: ステータスコード
-** %b: クライアントに送信されたオブジェクトサイズ（送れなかった時は、"-"）
+ * LogFormat "%h %l %u %t \"%r\" %>s %b" common
+ ** %h: サーバへリクエストしたクライアントIP
+ ** %l: クライアントのアイデンティティ情報ですが、デフォルト取得しない設定になっているため、”-”（ハイフン）で表示される
+ ** %u: HTTP認証によるリクエストしたユーザID（認証していない場合は、"-"）
+ ** %t: サーバがリクエストを受け取った時刻
+ ** \"%r\": メソッド、パス、プロトコルなど
+ ** %>s: ステータスコード
+ ** %b: クライアントに送信されたオブジェクトサイズ（送れなかった時は、"-"）
 
 
 === フィールド定義
@@ -39,43 +40,44 @@ Apacheのアクセスログのログフォーマットは以下な感じです�
 また、この時にタイプも定義しておくとよいです。
 てことで、()内にタイプを記載します。
 
-* %hは、クライアントIPということで"clientip"(string)
-* %lは、アイデンティティ情報なので、"ident"(string)
-* %uは、認証なので、"auth"(string)
-* %tは、時刻なので"date"(date)
-* \"%r\"は、いくつかに分割したいので、メソッドは、"verb"、パスは、"path"、んでHTTPバージョンは、"httpversion"(一式string)
-* %>sは、ステータスコードなので、"response"(long)
-* %bは、オブジェクトサイズなので、"bytes"(long)
+ * %hは、クライアントIPということで"clientip"(string)
+ * %lは、アイデンティティ情報なので、"ident"(string)
+ * %uは、認証なので、"auth"(string)
+ * %tは、時刻なので"date"(date)
+ * \"%r\"は、いくつかに分割したいので、メソッドは、"verb"、パスは、"path"、んでHTTPバージョンは、"httpversion"(一式string)
+ * %>sは、ステータスコードなので、"response"(long)
+ * %bは、オブジェクトサイズなので、"bytes"(long)
 
 
 仮に上記がマッピングされると以下のようにいい感じになるはず！
 
+//list[stage04_list02][Apacheログの整形前データ（再掲）]{
+5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
+//}
 
-* 5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
-** clientip: 5.10.83.30
-** ident: -
-** auth: -
-** date: 10/Oct/2000:13:55:36 -0700
-** verb: GET
-** path: /test.html
-** httpversion: 1.0
-** response: 200
-** bytes: 2326
 
+//list[stage04_list03][Apacheログの整形後データ]{
+clientip: 5.10.83.30
+ident: -
+auth: -
+date: 10/Oct/2000:13:55:36 -0700
+verb: GET
+path: /test.html
+httpversion: 1.0
+response: 200
+bytes: 2326
+//}
 
 === GrokPatternをつくる
-Grok Filterは、様々なログを正規表現を駆使していい感じにフィールド分割して、マッチさせるためのプラグインです。
-Grok Filterは、GrokPatternという形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
+#@#前の章で紹介してたので説明文は削除
+Grok Filterには、@@<code>{GrokPattern}（@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
+という形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
 ただ、GrokPatternにないものは自分で作成する必要があります！
 そこは、次章で説明したいと思いますm(_ _)m
 
-
-（GrokPattern:@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
-
-
-それでは、ここからはフィールド一つ一つを見ていってGrokPatternを作成していきたいと思います。
+それでは、ここからは各フィールドを見ながらGrokPatternを作成していきたいと思います。
 GrokPatternを作成していくには、ログを左から順に攻略していくのが重要です。
-ということを念頭において進めていきたいと思います。
+これを念頭において進めていきたいと思います。
 
 ちなみにですが、そもそものGrokFilterの書き方とかはひとまず置いておきます！
 後ほど、その辺は詳しく書きます。
@@ -85,36 +87,49 @@ GrokPatternを作成していくには、ログを左から順に攻略してい
 
 === ClientIP
 ClientIPといことで、IPアドレスにマッチさせる必要があります。
-まずは、IPアドレスにマッチさせるためのGrokPatternがすでにないかを先ほどのGrokPatternのサイトから確認します。
+まずは、IPアドレスにマッチさせるためのGrokPatternがすでにないか、GrokPatternのサイト上で確認します。
 
-・・・あるではないか！（茶番劇っぽくてすまそんです）
-
-
-* IPORHOST (?:%{HOSTNAME}|%{IP})
-
-IPORHOST内に%{HOSTNAME}と%{IP}で構成されており、別に%{HOSTNAME}と%{IP}がGrokPatternとして定義されているので、それらを読み込むようになってます。
-また、先ほどGrokPatternサイトで調べてみると...ありますね！
+…あるではないか！（茶番劇っぽくてすまそんです）
 
 
-* HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)
-* IP (?:%{IPV6}|%{IPV4})
+//list[stage04_list04][ClientIPのGrokPattern]{
+IPORHOST (?:%{HOSTNAME}|%{IP})
+//}
+
+
+IPORHOST内は@@<code>{%{HOSTNAME}}と@@<code>{%{IP}}で構成されており、それぞれがGrokPatternとして定義されています。
+よってHOSTNAMEとIPを別々に読み込むことが可能です。
+#@#ってことですか？
+
+さらにHOSTNAMEとIP自体のGrokPatternは存在するかサイトで調べてみると…ありますね！
+
+//list[stage04_list05][HOSTNAMEのGrokPattern]{
+HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)
+//}
+
+//list[stage04_list05][IPのGrokPattern]{
+IP (?:%{IPV6}|%{IPV4})
+//}
+
 
 HOSTNAMEに正規表現が記載されていることがわりますね。
 また、IPは、IPv6とIPv4に対応できるように構成されてます。
 これも同じ様にサイトをみると正規表現で記載されていることがわかると思います。
 
-IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、(?:)と|（パイプ）はなんぞや？と思った人もいると思いますが、
-この(?:)は、文字列をマッチさせたい&&キャプチャさせたくない場合に使います（キャプチャは使用しないので説明しません）
-今回でいう文字列は、%{HOSTNAME}と%{IP}に該当する文字列を指します。
-また、|は、どちからか一方が一致した方を採用するという意味です。
+IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、@@<code>{(?:)}と@@<code>{|（パイプ）}はなんぞや？と思った人もいると思います。
+この@@<code>{(?:)}は、文字列をマッチさせたいかつキャプチャさせたくない場合に使います（キャプチャは使用しないので今回は説明を省略します）。
+今回でいう文字列は、@@<code>{%{HOSTNAME}}と@@<code>{%{IP}に該当する文字列を指します。
+また、@@<code>{|}は、どちからか一方が一致した方を採用するという意味です。
 
-結果、IPORHOSTは、HOSTNAMEかつ、IPに該当するものをマッチさせます。
+結果、IPORHOSTは、HOSTNAMEかつ、IPに該当するものをマッチさせる、という設定となっています。
 
 上記を踏まえてGrokPatternを記載すると以下な感じになります。
 
-* %{IPORHOST:clientip}
+//list[stage04_list06][IPORHOSTのGrokPattern]{
+%{IPORHOST:clientip}
+//}
 
-これらを図にすると以下です。
+@<img>{stage04-01}にイメージ図を載せましたので参考にしてみてください。
 
 //image[stage04-01][IPアドレスをGrokするイメージ図#01]{
   Grok説明図
@@ -124,12 +139,12 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 
 == Grok Constructorでテスト
-（Grok Constructor:@<href>{http://grokconstructor.appspot.com/do/match}）は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
-この他にも（GrokDebugger:@<href>{https://grokdebug.herokuapp.com/}）やKibanaのDevToolで提供しているGrokDebuggerなどがあります。
+Grok Constructor（@<href>{http://grokconstructor.appspot.com/do/match}）は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
+この他にもGrokDebugger（@<href>{https://grokdebug.herokuapp.com/}）やKibanaのDevToolで提供しているGrokDebuggerを使ってテストできます。
 であれば、KibanaのDevTool使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいため、Grok Constructorを使用します。
 また、個人的に使いやすいというのが大きいですがw
 
-Grok Constructorの使い方を以下の図で解説したいと思います。
+Grok Constructorの使い方を@@<img>{stage04-02}で解説したいと思います。
 
 //image[stage04-02][Grok Constructorでテスト#01]{
   Grok Constructor
@@ -148,9 +163,11 @@ Grok Constructorの使い方を以下の図で解説したいと思います。
 この調子で、他のフィールドに対しても定義していきたいと思います！
 
 === ident
-ユーザ名が付与されるのと"-"も含めてマッチできるものをGrokPatternで探すとUSERというGrokPatternがあるのでこちらを使用します。
+ユーザ名が付与されるのと@@<code>{-}も含めてマッチできるものをGrokPatternで探すと@@<code>{USER}というGrokPatternがあるのでこちらを使用します。
 
-* %{USER:ident}
+//list[stage04_list07][identのGrokPattern]{
+%{USER:ident}
+//}
 
 先ほどの様に、上記のGrokPatternでGrok Constructorでテストを実施するとIPアドレスが引っかかると思います。
 なので、%{IPORHOST:clientip}を含んでテストを実施してみてください。
@@ -160,19 +177,23 @@ Grok Constructorの使い方を以下の図で解説したいと思います。
 //}
 
 === auth
-authもUserと同様の定義で良いので、GrokPatternのUSERを使用します。
-また、identとauthの間もスペースがあるので\sもしくはスペースを入力する必要があります。
- ※図の記載では\sを¥sで記載してますm(_ _)m
- ※個人的には、可読性を重視して\sを使用してます
+authもUserと同様の定義で良いので、GrokPatternの@@<code>{USER}を使用します。
+また、identとauthの間もスペースがあるので@@<code>{\s}もしくはスペースを入力する必要があります。
+図の記載では\sを¥sで記載してますm(_ _)m
+
+//footnote[stage04-fn01][個人的には、可読性を重視して\sを使用してます]
+
 
 === date
 次は、時刻ですね！
-時刻のフォーマットは、"[day/month/year:hour:minute:second zone]"です。
+時刻のフォーマットは、@@<code>{[day/month/year:hour:minute:second zone]}です。
 これに当てはまるGrokPatternを探していたいと思いますー
 
 以下のGrokPatternが当てはまることがわかります。
 
-* HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
+//list[stage04_list08][dateのGrokPattern]{
+HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
+//}
 
 なので、こちらを使用してGrok Constructorでテストしてみたいと思います。
 先ほど作成したGrok Constructorに連ねてきましょー
@@ -183,9 +204,9 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 
 あれ？"NOT MATCHED"ですね。。
 そうなんです！
-じつは、%{HTTPDATE}に該当しない"[]"があるのです。
-なので、以下の図で示している通り、"[]"を取り除く必要があるのです！
-無効化するにはエスケープ\（バックスラッシュ）を使用します。
+じつは、@@<code>{%{HTTPDATE}}に該当しない@@<code>{[]}があるのです。
+なので、以下の図で示している通り、@<code>{[]}を取り除く必要があるのです！
+無効化するにはエスケープ@@<code>{\}（バックスラッシュ）を使用します。
 
 //image[stage04-06][IPアドレスをGrokするイメージ図#02]{
   Grok
@@ -196,26 +217,32 @@ authもUserと同様の定義で良いので、GrokPatternのUSERを使用しま
 それでは、クライアントからのリクエストについて攻略したいと思いますー
 これは、ダブルクォーテーションの中にひとまとまりされているので、取りたい情報を定義したフィールドにマッチできるようにGrokPatternを作成していきたいと思います。
 
-* "GET /test.html HTTP/1.0"
+//list[stage04_list09][リクエストのGrokPattern]{
+"GET /test.html HTTP/1.0"
+//}
 
 まず、GETですが、GETという文字列以外にもPOSTや、DELETEなどがあります。
 なので単純にGETという固定文字でマッチングさせるのでは、あかんのです。
 また、GET|PUT|DELETE..etcなどもイケてないですね。。
+#@#なんでや
 
-ということで、英単語が入るということがわかっているので、\bxxx\bに該当するGrokPatternを使用します。
- ※xxx：何かしらの英単語の意味
+ということで、英単語が入るということがわかっているので、\bxxx\b（xxxは何かしらの英単語）に該当するGrokPatternを使用します。
 
- いつも通り、GrokPatternを探すと以下が該当しますね。
+いつも通り、GrokPatternを探すと以下が該当しますね。
 
- * WORD \b\w+\b
+//list[stage04_list10][英単語のGrokPattern]{
+WORD \b\w+\b
+//}
 
 次にパスですが、リクエストによって変動したりするため、柔軟性を求めて以下のNOTSPACEを使用します。
 NOTSPACEは、空白文字以外にマッチのため、空白文字が出現するまでマッチします。
 
-* NOTSPACE \S+
+//list[stage04_list11][NOTSPACEのGrokPattern]{
+NOTSPACE \S+
+//}
 
 最後のHTTPのバージョンですが、HTTP部分は不要なので取り除くのと、そもそも、HTTPバージョンがはいっていないパターンもあったりします。
-そんな時は、(?:)?を利用するこで、このGrokPatternにマッチする時は使うけど、マッチしない時は使わないよ！といった定義ができるのです！（素敵）
+そんな時は、@@<code>{(?:)?}を利用するこで、このGrokPatternにマッチする時は使うけど、マッチしない時は使わないよ！といった定義ができるのです！（素敵）
 これは、便利なので覚えて置いてくださいな！
 最後に最短マッチとして、%{DATA}もパイプで組み込んでます。
 
