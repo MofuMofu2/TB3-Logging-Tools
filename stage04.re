@@ -19,7 +19,7 @@
 
 
 === ログフォーマットを調べる
-ログは引き続き@<list>{stage03_list05}を使用します。
+ログは引き続き第3章のものを使用します。
 Apacheのサイトにはログのフォーマットが詳細に記載されてます。
 #@#URLあるとよい。追記するなら@<href>{URL}
 
@@ -107,7 +107,7 @@ IPORHOST内は@<code>{%{HOSTNAME}}と@<code>{%{IP}}で構成されており、�
 HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)
 //}
 
-//list[stage04_list05][IPのGrokPattern]{
+//list[stage04_list05x][IPのGrokPattern]{
 IP (?:%{IPV6}|%{IPV4})
 //}
 
