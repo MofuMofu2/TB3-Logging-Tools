@@ -258,7 +258,7 @@ output {
     "ASDM-session-number" => " 0",
                 "EventID" => "ASA-6-606001"
 }
-}
+//}
 
 想定通りにログを抽出できましたね！
 GrokPatternにあるものは積極的に使用し、ないものはCustomPatternで作る！といったことを学習できたのではないでしょうか。
