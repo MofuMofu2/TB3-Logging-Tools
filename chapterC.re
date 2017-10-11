@@ -105,7 +105,7 @@ drwxrwxr-x  4 root root  4096 10月  4 19:18 2017 usr
 curl -X POST -d 'json={"json":"message"}' http://localhost:8888/debug.test
 //}
 
-@@<code>{/var/log/td-agent}配下にある@@<code>{td-agent.log}に次のような出力があれば、
+@<code>{/var/log/td-agent}配下にある@<code>{td-agent.log}に次のような出力があれば、
 fluentdは正常に動作しています。
 
 //list[fluetd_testlog][td-agent.logの出力結果（抜粋）]{

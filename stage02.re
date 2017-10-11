@@ -27,15 +27,15 @@
 
 == Logstash
 Logstashは、Elastic社が提供するオープンソースログ収集管理ツールです。
-取り込み先としては、同じElastic社製の検索エンジン@@<code>{Elasticsearch}と組み合わせることでニアリアルタイムにログを取り込むことができます。
+取り込み先としては、同じElastic社製の検索エンジン@<code>{Elasticsearch}と組み合わせることでニアリアルタイムにログを取り込むことができます。
 
-Logstashでログを収集する流れの一例を@@<img>{stage02-01}に示します。
+Logstashでログを収集する流れの一例を@<img>{stage02-01}に示します。
 
 //image[stage02-01][Logstashの構造#01]{
   Logstashの構造の図を追加
 //}
 
-@@<img>{stage02-02}はLogstashの処理の流れを示したものです。LogstashはINPUTS・FILTERS・OUTPUTSの
+@<img>{stage02-02}はLogstashの処理の流れを示したものです。LogstashはINPUTS・FILTERS・OUTPUTSの
 流れでデータを処理します。
 
 //image[stage02-02][Logstashの構造#02]{
@@ -52,8 +52,8 @@ Logstashを利用すれば、様々なデータ形式に対応できます。
 === FILTERS
 INPUTしたデータソースをLogstashのFilterで解析し、構造化します。
 #@#フィールドを識別するっていきなりでてくるとわかりにくい+無くても繋がるのでとりました。入れるならfieldsについて説明が欲しいかも。
-データソースの変換には、正規表現でデータをパースするためのfilterプラグイン@@<code>{grok（以降Grok Filterと表記）}
-やIPアドレスから地理情報を得るためのfilterプラグイン@@<code>{Geoip（以降Geoip Filterと表記）}など様々なフィルタライブラリ
+データソースの変換には、正規表現でデータをパースするためのfilterプラグイン@<code>{grok（以降Grok Filterと表記）}
+やIPアドレスから地理情報を得るためのfilterプラグイン@<code>{Geoip（以降Geoip Filterと表記）}など様々なフィルタライブラリ
 （@<href>{https://www.elastic.co/guide/en/logstash/current/filter-plugins.html}）が用意されています。
 くどいですが、このGrok Filterにフォーカスします！
 
