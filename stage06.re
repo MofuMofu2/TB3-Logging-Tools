@@ -231,7 +231,7 @@ ALB_ACCESS_LOG %{NOTSPACE:type} %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{I
 
 CLBのGrok Constructorの結果です！
 
-//image[stage06-01][CLB Grok Constructor結果]{
+//image[stage06-02][CLB Grok Constructor結果]{
   Grok Constructor
 //}
 
