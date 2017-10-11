@@ -70,7 +70,7 @@ bytes: 2326
 
 === GrokPatternをつくる
 #@#前の章で紹介してたので説明文は削除
-Grok Filterには、@@<code>{GrokPattern}（@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
+Grok Filterには、@<code>{GrokPattern}（@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
 という形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
 ただ、GrokPatternにないものは自分で作成する必要があります！
 そこは、次章で説明したいと思いますm(_ _)m
@@ -97,7 +97,7 @@ IPORHOST (?:%{HOSTNAME}|%{IP})
 //}
 
 
-IPORHOST内は@@<code>{%{HOSTNAME}}と@@<code>{%{IP}}で構成されており、それぞれがGrokPatternとして定義されています。
+IPORHOST内は@<code>{%{HOSTNAME}}と@<code>{%{IP}}で構成されており、それぞれがGrokPatternとして定義されています。
 よってHOSTNAMEとIPを別々に読み込むことが可能です。
 #@#ってことですか？
 
@@ -116,10 +116,10 @@ HOSTNAMEに正規表現が記載されていることがわりますね。
 また、IPは、IPv6とIPv4に対応できるように構成されてます。
 これも同じ様にサイトをみると正規表現で記載されていることがわかると思います。
 
-IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、@@<code>{(?:)}と@@<code>{|（パイプ）}はなんぞや？と思った人もいると思います。
-この@@<code>{(?:)}は、文字列をマッチさせたいかつキャプチャさせたくない場合に使います（キャプチャは使用しないので今回は説明を省略します）。
-今回でいう文字列は、@@<code>{%{HOSTNAME}}と@@<code>{%{IP}に該当する文字列を指します。
-また、@@<code>{|}は、どちからか一方が一致した方を採用するという意味です。
+IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、@<code>{(?:)}と@<code>{|（パイプ）}はなんぞや？と思った人もいると思います。
+この@<code>{(?:)}は、文字列をマッチさせたいかつキャプチャさせたくない場合に使います（キャプチャは使用しないので今回は説明を省略します）。
+今回でいう文字列は、@<code>{%{HOSTNAME}}と@<code>{%{IP}に該当する文字列を指します。
+また、@<code>{|}は、どちからか一方が一致した方を採用するという意味です。
 
 結果、IPORHOSTは、HOSTNAMEかつ、IPに該当するものをマッチさせる、という設定となっています。
 
@@ -144,7 +144,7 @@ Grok Constructor（@<href>{http://grokconstructor.appspot.com/do/match}）は、
 であれば、KibanaのDevTool使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいため、Grok Constructorを使用します。
 また、個人的に使いやすいというのが大きいですがw
 
-Grok Constructorの使い方を@@<img>{stage04-02}で解説したいと思います。
+Grok Constructorの使い方を@<img>{stage04-02}で解説したいと思います。
 
 //image[stage04-02][Grok Constructorでテスト#01]{
   Grok Constructor
@@ -163,7 +163,7 @@ Grok Constructorの使い方を@@<img>{stage04-02}で解説したいと思いま
 この調子で、他のフィールドに対しても定義していきたいと思います！
 
 === ident
-ユーザ名が付与されるのと@@<code>{-}も含めてマッチできるものをGrokPatternで探すと@@<code>{USER}というGrokPatternがあるのでこちらを使用します。
+ユーザ名が付与されるのと@<code>{-}も含めてマッチできるものをGrokPatternで探すと@<code>{USER}というGrokPatternがあるのでこちらを使用します。
 
 //list[stage04_list07][identのGrokPattern]{
 %{USER:ident}
@@ -177,8 +177,8 @@ Grok Constructorの使い方を@@<img>{stage04-02}で解説したいと思いま
 //}
 
 === auth
-authもUserと同様の定義で良いので、GrokPatternの@@<code>{USER}を使用します。
-また、identとauthの間もスペースがあるので@@<code>{\s}もしくはスペースを入力する必要があります。
+authもUserと同様の定義で良いので、GrokPatternの@<code>{USER}を使用します。
+また、identとauthの間もスペースがあるので@<code>{\s}もしくはスペースを入力する必要があります。
 図の記載では\sを¥sで記載してますm(_ _)m
 
 //footnote[stage04-fn01][個人的には、可読性を重視して\sを使用してます]
@@ -186,7 +186,7 @@ authもUserと同様の定義で良いので、GrokPatternの@@<code>{USER}を�
 
 === date
 次は、時刻ですね！
-時刻のフォーマットは、@@<code>{[day/month/year:hour:minute:second zone]}です。
+時刻のフォーマットは、@<code>{[day/month/year:hour:minute:second zone]}です。
 これに当てはまるGrokPatternを探していたいと思いますー
 
 以下のGrokPatternが当てはまることがわかります。
@@ -204,9 +204,9 @@ HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
 
 あれ？"NOT MATCHED"ですね。。
 そうなんです！
-じつは、@@<code>{%{HTTPDATE}}に該当しない@@<code>{[]}があるのです。
+じつは、@<code>{%{HTTPDATE}}に該当しない@<code>{[]}があるのです。
 なので、以下の図で示している通り、@<code>{[]}を取り除く必要があるのです！
-無効化するにはエスケープ@@<code>{\}（バックスラッシュ）を使用します。
+無効化するにはエスケープ@<code>{\}（バックスラッシュ）を使用します。
 
 //image[stage04-06][IPアドレスをGrokするイメージ図#02]{
   Grok
@@ -237,19 +237,22 @@ WORD \b\w+\b
 次にパスですが、リクエストによって変動したりするため、柔軟性を求めて以下のNOTSPACEを使用します。
 NOTSPACEは、空白文字以外にマッチのため、空白文字が出現するまでマッチします。
 
-//list[stage04_list11][NOTSPACEのGrokPattern]{
+//list[stage04_list11][NOTSPACEのGrokPattern#01]{
 NOTSPACE \S+
 //}
 
 最後のHTTPのバージョンですが、HTTP部分は不要なので取り除くのと、そもそも、HTTPバージョンがはいっていないパターンもあったりします。
-そんな時は、@@<code>{(?:)?}を利用するこで、このGrokPatternにマッチする時は使うけど、マッチしない時は使わないよ！といった定義ができるのです！（素敵）
+そんな時は、@<code>{(?:)?}を利用するこで、このGrokPatternにマッチする時は使うけど、マッチしない時は使わないよ！といった定義ができるのです！（素敵）
 これは、便利なので覚えて置いてくださいな！
-最後に最短マッチとして、%{DATA}もパイプで組み込んでます。
+最後に最短マッチとして、@<code>{%{DATA\}}もパイプで組み込んでます。
 
-* (?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})"
+#@#Re:VIEWの@<>{}で}が必要なときはバックスラッシュ
 
+//list[stage04_list12][NOTSPACEのGrokPattern#02]{
+(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})"
+//}
 
-てことで、ここまでを以下の図にまとめましたーヽ(*ﾟдﾟ)ノ
+てことで、ここまでを@<img>{stage04-07}にまとめましたーヽ(*ﾟдﾟ)ノ
 
 //image[stage04-07][IPアドレスをGrokするイメージ図#03]{
   Grokパワポ
@@ -258,16 +261,20 @@ NOTSPACE \S+
 
 === response & bytes
 ここまできたらあと少し！
-responseは、ステータスコードなので、NUMBERを使用します。
-また、bytesも同様にNUMBERを使用しますが、オブジェクトが送れなかった場合は、"-"のため、|で"-"を追加します。
+responseは、ステータスコードなので、@<code>{NUMBER}を使用します。
+また、bytesも同様に@<code>{NUMBER}を使用しますが、オブジェクトが送れなかった場合は、@<code>{-}のため、@<code>{|}で@<code>{-}を追加します。
 
 これで全て整ったので、Grok Constructorでテストしたいと思います。
 
 
 === Grok Constructor全体テスト
-以下のGrokPatternでテストをしたいと思います。
+以下のGrokPatternでテストをしたいと思います。実際は改行しませんが、本文の都合上適宜改行しています。
 
-* %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+//list[stage04_list13][最終的なGrokPattern]{
+%{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\]
+"(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})"
+%{NUMBER:response} (?:%{NUMBER:bytes}|-)
+//}
 
 //image[stage04-08][Grok Constructorでテスト#04]{
   Grok Constructor
@@ -278,26 +285,28 @@ responseは、ステータスコードなので、NUMBERを使用します。
 
 == logstashを動かしてみる
 やっとここでLogstashのconfファイルが登場します。
-てことで、confファイルを作成したいと思いますー
+てことで、confファイルを作成したいと思いますー。
 
 今までは、INPUTとOUTPUTのみでしたが、先ほど作成したGrokPatternを埋め込みたいので、FILTERを追加します。
-GrokPatternをFILTERに直接コーディングすることも可能ですが、可読性を意識したいため、GrokPatternをファイルとして外出しします。
+GrokPatternをFILTERに直接コーディングすることも可能ですが、可読性を意識したいため、GrokPatternをconfファイルとして外出しします。
 
 外出しするため、以下の作業を実施します。
 
 //cmd{
-### GrokPatternファイルを配置するためのディレクトリを作成
+# GrokPatternファイルを配置するためのディレクトリを作成
 $ mkdir patterns
-### httpd用のGrokPatternファイルを作成
-### GrokPattern名をHTTPD_COMMON_LOGとします
+# httpd用のGrokPatternファイルを作成
+# GrokPattern名をHTTPD_COMMON_LOGとします
 $ vim patterns/httpd_patterns
-HTTPD_COMMON_LOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\] "(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-)
+%{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:date}\]
+"(?:%{WORD:verb} %{NOTSPACE:path}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})"
+%{NUMBER:response} (?:%{NUMBER:bytes}|-)
 //}
 
-次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfに以下を記載します。
+次にGrokPatternファイルを作成したので、ログの変換をさせるためとGrokPatternを読み込むためにLogstashのconfファイルに以下を記載します。
+ファイル名はtest03.confとしました。
 
-//cmd{
-$ vim conf.d/test03.conf
+//list[stage04_list14][test03.conf]{
 input {
   file {
     path => "/etc/logstash/log/httpd_access.log"
@@ -314,11 +323,13 @@ output {
 }
 //}
 
+#@#これはべんりだね
+
 それでは、実行してみますー
 
 //cmd{
-$ usr/share/logstash/bin/logstash -f conf.d/test02.conf
-### 結果！！
+$ usr/share/logstash/bin/logstash -f conf.d/test03.conf
+# 出力結果！！
 {
         "request" => "/test.html",
            "auth" => "-",
@@ -338,13 +349,13 @@ $ usr/share/logstash/bin/logstash -f conf.d/test02.conf
 //}
 
 おぉ！いい感じにフィールドが抽出できたーヾ(´Д｀)ノｲｴｰｲ
+
 が、しかし、コレでは足りない！
 ログのタイムスタンプではなく、ログを取り込んだ時刻になっているので、修正が必要です。
 また、グローバルIPがあるんだから、地域情報とマッピングしたいですよね！
 ということで、Logstashのconfファイルを修正したいと思いますー
 
-//cmd{
-$ vim conf.d/test03.conf
+//list[stage04_list15][test03.conf（修正後）]{
 input {
   file {
     path => "/etc/logstash/log/httpd_access.log"
@@ -372,21 +383,21 @@ output {
   stdout { codec => rubydebug }
 //}
 
-各々のフィルターについて図と合わせて説明します。
+各々のフィルターについて@<img>{stage04-09}と合わせて説明します。
 
 //image[stage04-09][Logstash.confの説明]{
   Logstash.conf
 //}
 
-1. ファイルの読み込み位置を指定するためで、Logstash起動前のログも対象としたいため、"biginning"としてます
-2. パターンファイルの読み込み
-3. messageフィールドに格納されている値を”HTTPD_COMMON_LOG”でマッチングします
-4. パターンファイル内でIPアドレスをマッチングさせているclientipフィールドを対象にgeoipフィルタを利用し、地理情報を取得します
-5. Logstashは、ログデータを取り込んだ時間を@timestampに付与するので、dateフィルタを用いることで実際のログデータのタイムスタンプを付与することができます
-6. パターンファイル内のdateフィールドに対して定義したdateパターンとマッチする場合に値を書き換えます
-7. 日付の月が"Oct"になっているため、localeを"en"に指定してます
-8. 変更を変えたいターゲットとして"@timestamp"を指定します
-9. 不要なフィールドをremove_fieldで指定し、削除します（容量を抑えるためと不必要な情報を与えないため）
+ 1. ファイルの読み込み位置を指定するためで、Logstash起動前のログも対象としたいため、"biginning"としてます
+ 2. パターンファイルの読み込み
+ 3. messageフィールドに格納されている値を”HTTPD_COMMON_LOG”でマッチングします
+ 4. パターンファイル内でIPアドレスをマッチングさせているclientipフィールドを対象にgeoipフィルタを利用し、地理情報を取得します
+ 5. Logstashは、ログデータを取り込んだ時間を@timestampに付与するので、dateフィルタを用いることで実際のログデータのタイムスタンプを付与することができます
+ 6. パターンファイル内のdateフィールドに対して定義したdateパターンとマッチする場合に値を書き換えます
+ 7. 日付の月が"Oct"になっているため、localeを"en"に指定してます
+ 8. 変更を変えたいターゲットとして"@timestamp"を指定します
+ 9. 不要なフィールドをremove_fieldで指定し、削除します（容量を抑えるためと不必要な情報を与えないため）
 
 それでは、修正したconfファイルで再度実行すると以下の感じになります。
 地理情報やタイムスタンプや不要な情報が削除されていることがわかります。
