@@ -136,7 +136,7 @@ toc: true
 # coverimage: cover.jpg
 #
 # 表紙の後に大扉ページを作成するか。省略した場合はnull (作成しない)
-titlepage: true
+titlepage: null
 #
 # 自動生成される大扉ページを上書きするファイル。ファイル名を指定すると大扉として入る
 # titlefile: null
@@ -148,7 +148,7 @@ titlepage: true
 # creditfile: null
 
 # 奥付を作成するか。デフォルトでは作成されない。trueを指定するとデフォルトの奥付、ファイル名を指定するとそれがcolophon.htmlとしてコピーされる
-colophon: trune
+colophon: null
 
 # 裏表紙ファイル (画像はcoversまたはimagesに配置する)。ファイル名を指定すると裏表紙として入る
 # backcover: null
@@ -274,7 +274,7 @@ epubmaker:
   # epubmaker:階層を使うものはここまで
 
 # LaTeX用のスタイルファイル(styディレクトリ以下に置くこと)
-texstyle: reviewmacro
+texstyle: techbooster-doujin
 #
 # LaTeX用のdocumentclassを指定する
 # texdocumentclass: ["jsbook", "b5j"]
@@ -321,5 +321,5 @@ pdfmaker:
   # image_scale2width: true
   #
   # 奥付を作成するか。trueを指定するとデフォルトの奥付、ファイル名を指定するとそれがcolophon.htmlとしてコピーされる
-  colophon: true
+  colophon: null
   # pdfmaker:階層を使うものはここまで
