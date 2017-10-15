@@ -3,7 +3,7 @@
 Logstash6.0betaがすでにインストールされていることを前提とします。
 インストール方法は第4章を参考にして頂ければと思います！@<fn>{stage03_fn01}
 
-//footnote[stage03_fn01][決してサボってるわけじゃないですよwページの有効活用]
+//footnote[stage03_fn01][決してサボってるわけじゃないですよ！ページの有効活用]
 
 == 動かす前のLogstash準備
 早速ですが、Logstashを動かしたいと思います！
@@ -158,6 +158,8 @@ $ /usr/share/logstash/bin/logstash -f conf.d/test02.conf
        "message" => "5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] \"GET /test.html HTTP/1.0\" 200 2326"
 }
 //}
+
+
 
 あれ？あれれ？？？
 

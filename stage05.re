@@ -18,8 +18,10 @@
 IPアドレスは、適当なプライベートIPアドレスを割り当てています。
 
 //list[stage05-list01][Cisco ASAのログ]{
-Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
-Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
+Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0
+ from 192.168.1.254 started
+Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0
+ from 192.168.1.254 ended
 //}
 
 
@@ -197,7 +199,8 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 //list[stage05_list14][パターンファイルまとめ]{
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
-CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)
+(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
 //}
 
 
@@ -260,7 +263,8 @@ input {
 filter {
   grok {
   	patterns_dir => ["/etc/logstash/patterns/asa_patterns"]
-  	match => { "message" => "%{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}" }
+  	match => { "message" => "%{CISCOTIMESTAMP:date}\s
+    %{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}" }
   }
   date {
     match => ["date", "MMM dd HH:mm:ss", "MMM  d HH:mm:ss" ]
