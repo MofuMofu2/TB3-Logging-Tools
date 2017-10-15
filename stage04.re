@@ -21,7 +21,8 @@
 === ログフォーマットを調べる
 ログは引き続き第3章のものを使用します。
 Apacheのサイトにはログのフォーマットが詳細に記載されてます。
-#@#URLあるとよい。追記するなら@<href>{URL}
+
+@<code>{ApacheLogFormat}（@<href>{https://httpd.apache.org/docs/2.4/en/logs.html}）
 
 Apacheのアクセスログのログフォーマットは次のような感じで構成されています。
 
@@ -112,12 +113,12 @@ IP (?:%{IPV6}|%{IPV4})
 //}
 
 
-HOSTNAMEに正規表現が記載されていることがわりますね。
+HOSTNAMEに正規表現が記載されていることがわかりますね。
 また、IPは、IPv6とIPv4に対応できるように構成されてます。
 これも同じ様にサイトをみると正規表現で記載されていることがわかると思います。
 
 IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思いますが、@<code>{(?:)}と@<code>{|（パイプ）}はなんぞや？と思った人もいると思います。
-この@<code>{(?:)}は、文字列をマッチさせたいかつキャプチャさせたくない場合に使います（キャプチャは使用しないので今回は説明を省略します）。
+この@<code>{(?:)}は、文字列をマッチさせたい、かつキャプチャさせたくない場合に使います（キャプチャは使用しないので今回は説明を省略します）。
 今回でいう文字列は、@<code>{%{HOSTNAME}}と@<code>{%{IP}に該当する文字列を指します。
 また、@<code>{|}は、どちからか一方が一致した方を採用するという意味です。
 
@@ -140,8 +141,8 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 == Grok Constructorでテスト
 Grok Constructor（@<href>{http://grokconstructor.appspot.com/do/match}）は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
-この他にもGrokDebugger（@<href>{https://grokdebug.herokuapp.com/}）やKibanaのDevToolで提供しているGrokDebuggerを使ってテストできます。
-であれば、KibanaのDevTool使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいため、Grok Constructorを使用します。
+この他にもGrokDebugger（@<href>{https://grokdebug.herokuapp.com/}）やKibanaのX-Packをインストールすることで、KibanaのDevToolsでGrokDebuggerを使ってテストもできます。
+であれば、KibanaのDevTools使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいためGrok Constructorを使用します。
 また、個人的に使いやすいというのが大きいですがw
 
 Grok Constructorの使い方を@<img>{stage04-02}で解説したいと思います。
@@ -224,7 +225,7 @@ HTTPDATE %{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} %{INT}
 まず、GETですが、GETという文字列以外にもPOSTや、DELETEなどがあります。
 なので単純にGETという固定文字でマッチングさせるのでは、あかんのです。
 また、GET|PUT|DELETE..etcなどもイケてないですね。。
-#@#なんでや
+汎用的にすることと、可読性を意識してマッチングさせたいためです。
 
 ということで、英単語が入るということがわかっているので、\bxxx\b（xxxは何かしらの英単語）に該当するGrokPatternを使用します。
 
@@ -261,6 +262,7 @@ NOTSPACE \S+
 
 === response & bytes
 ここまできたらあと少し！
+
 responseは、ステータスコードなので、@<code>{NUMBER}を使用します。
 また、bytesも同様に@<code>{NUMBER}を使用しますが、オブジェクトが送れなかった場合は、@<code>{-}のため、@<code>{|}で@<code>{-}を追加します。
 
@@ -285,7 +287,7 @@ responseは、ステータスコードなので、@<code>{NUMBER}を使用しま
 
 == logstashを動かしてみる
 やっとここでLogstashのconfファイルが登場します。
-てことで、confファイルを作成したいと思いますー。
+それでは、confファイルを作成したいと思いますー。
 
 今までは、INPUTとOUTPUTのみでしたが、先ほど作成したGrokPatternを埋め込みたいので、FILTERを追加します。
 GrokPatternをFILTERに直接コーディングすることも可能ですが、可読性を意識したいため、GrokPatternをconfファイルとして外出しします。
