@@ -15,7 +15,6 @@
 （数時間後）
 
 新人：つらたん。。Orz
-//}
 
 こういった光景ってあると思うんですよね(筆者も昔経験したことがあります)。
 たしかにこの方法でも集計できるのですが、集計するのに大きな工数がかかるのと確認するまでに時間がかかってしまいます。
@@ -63,7 +62,6 @@ INPUTしたデータソースをLogstashのFilterで解析し、構造化しま�
 やIPアドレスから地理情報を得るためのfilterプラグイン@<code>{Geoip（以降Geoip Filterと表記）}など様々なフィルタライブラリ
 （@<href>{https://www.elastic.co/guide/en/logstash/current/filter-plugins.html}）が用意されています。
 くどいですが、このGrok Filterにフォーカスします！
-
 
 === OUTPUTS
 データを構造化したのち、任意の出力先にデータを送付します。

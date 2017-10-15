@@ -72,7 +72,8 @@ Missing a required setting for the csv output plugin:
     }
   }
 [2017-10-01T13:12:23,401][ERROR][logstash.agent           ]
-Failed to execute action {:action=>LogStash::PipelineAction::Create/pipeline_id:main,
+Failed to execute action
+{:action=>LogStash::PipelineAction::Create/pipeline_id:main,
 :exception=>"LogStash::ConfigurationError",
 :message=>"Something is wrong with your configuration."}
 # この1セットが延々と出力される
