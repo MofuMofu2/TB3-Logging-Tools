@@ -20,6 +20,7 @@
 
 == ログフォーマットを調べる
 ELBのログフォーマットを調べたいと思います。
+
 あ、前提としてELBのロギングは有効化されていることとします！
 もし設定されていない方は、公式ドキュメントを確認頂ければと思いますー
 
@@ -52,11 +53,11 @@ ELBのログフォーマットを調べたいと思います。
 
 == フィールド定義
 ここからは、フィールド定義するよ！
-今回は、Apacheのアクセスログと違ってすでにフィールド名が公式として定義されているので、そのまま使用します。
-ただし、client:portのようなフィールドは、clientipとportやbackendも分割します。
-また、requestも分割します。
 
-なので、ここでは、フィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
+今回は、Apacheのアクセスログと違ってすでにフィールド名が公式として定義されているので、そのまま使用します。
+ただし、client:portのようなフィールドは、clientipとportに分割します。その他のbackendやrequestも分割します。
+
+それではフィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
 サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってます。
 
  * 2015-05-13T23:39:43.945958Z my-loadbalancer 5.10.83.30:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
@@ -135,7 +136,7 @@ Apacheアクセスログと同様に@<code>{IPORHOST}を使用したくなりま
 
 
 === リクエストタイム3兄弟
-これらすべてGrokPatternの @<code>{NUMBER}を使用し、応答がなかったように@<code>{|}で @<code>{-1}も記載します。
+これらすべてGrokPatternの @<code>{NUMBER}を使用し、応答がなかった場合に@<code>{|}で @<code>{-1}も記載します。
 このフィールドを利用するこで、ELBが受け付けてからのレイテンシを測ることができます。
 
 //list[stage06_list05][リクエストタイム用のGrokPattern]{
@@ -176,14 +177,16 @@ GrokPatternをみると@<code>{ELB_REQUEST_LINE}という設定があります�
 
 
 //list[stage06_list08][request用のGrokPattern]{
-ELB_REQUEST_LINE (?:%{WORD:verb} %{ELB_URI:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})
+ELB_REQUEST_LINE (?:%{WORD:verb} %{ELB_URI:request}
+(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})
 //}
 
 
 上記の@<code>{ELB_REQUEST_LINE}内で@<code>{ELB_URI}を呼び出しています。
 
 //list[stage06_list09][ELB_URI用のGrokPattern]{
-ELB_URI %{URIPROTO:proto}://(?:%{USER}(?::[^@]*)?@)?(?:%{URIHOST:urihost})?(?:%{ELB_URIPATHPARAM})?
+ELB_URI %{URIPROTO:proto}://(?:%{USER}(?::[^@]*)?@)?
+(?:%{URIHOST:urihost})?(?:%{ELB_URIPATHPARAM})?
 //}
 
 
@@ -223,8 +226,27 @@ ALB版も合わせてGrokPatternを記載しますー
 
 
 //list[stage06_list13][キャプション]{
-CLB_ACCESS_LOG %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port:int}) (?:%{IP:backend_ip}:%{INT:backend_port:int}|-) (?:%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code:int}|-) %{INT:received_bytes:int} %{INT:sent_bytes:int} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-)
-ALB_ACCESS_LOG %{NOTSPACE:type} %{TIMESTAMP_ISO8601:date} %{NOTSPACE:elb} (?:%{IP:client_ip}:%{INT:client_port}) (?:%{IP:backend_ip}:%{INT:backend_port}|-) (:?%{NUMBER:request_processing_time}|-1) (?:%{NUMBER:backend_processing_time}|-1) (?:%{NUMBER:response_processing_time}|-1) (?:%{INT:elb_status_code}|-) (?:%{INT:backend_status_code}|-) %{INT:received_bytes} %{INT:sent_bytes} \"%{ELB_REQUEST_LINE}\" \"(?:%{DATA:user_agent}|-)\" (?:%{NOTSPACE:ssl_cipher}|-) (?:%{NOTSPACE:ssl_protocol}|-) %{NOTSPACE:target_group_arn} \"%{NOTSPACE:trace_id}\"
+CLB_ACCESS_LOG %{TIMESTAMP_ISO8601:date}\s%{NOTSPACE:elb}
+\s(?:%{IP:client_ip}:%{INT:client_port:int})
+\s(?:%{IP:backend_ip}:%{INT:backend_port:int}|-)
+\s(?:%{NUMBER:request_processing_time}|-1)
+\s(?:%{NUMBER:backend_processing_time}|-1)
+\s(?:%{NUMBER:response_processing_time}|-1)
+\s(?:%{INT:elb_status_code}|-)\s(?:%{INT:backend_status_code:int}|-)
+\s%{INT:received_bytes:int} %{INT:sent_bytes:int}\s\"%{ELB_REQUEST_LINE}\"
+\s\"(?:%{DATA:user_agent}|-)\"\s(?:%{NOTSPACE:ssl_cipher}|-)
+\s(?:%{NOTSPACE:ssl_protocol}|-)
+ALB_ACCESS_LOG %{NOTSPACE:type}\s%{TIMESTAMP_ISO8601:date}
+\s%{NOTSPACE:elb}\s(?:%{IP:client_ip}:%{INT:client_port})
+\s(?:%{IP:backend_ip}:%{INT:backend_port}|-)
+\s(:?%{NUMBER:request_processing_time}|-1)
+\s(?:%{NUMBER:backend_processing_time}|-1)
+\s(?:%{NUMBER:response_processing_time}|-1)
+\s(?:%{INT:elb_status_code}|-)\s(?:%{INT:backend_status_code}|-)
+\s%{INT:received_bytes} %{INT:sent_bytes}\s\"%{ELB_REQUEST_LINE}\"
+\s\"(?:%{DATA:user_agent}|-)\"\s(?:%{NOTSPACE:ssl_cipher}|-)
+\s(?:%{NOTSPACE:ssl_protocol}|-)\s%{NOTSPACE:target_group_arn}
+\s\"%{NOTSPACE:trace_id}\"
 //}
 
 #@#長すぎてきれちゃうのでキリのいいところで改行入れて欲しい
@@ -239,8 +261,8 @@ CLBのGrok Constructorの結果です！
 == logstashを動かしてみる
 ここからconfファイルの作成ですが、Apacheのアクセスログと構造はほぼ一緒です。
 ただ、大きく違うのがINPUTがファイルパスではなく、S3からという点です。
-なので、S3をINPUTにした取り込み方法について解説していきたいと思います。
-FILTERとOUTPUTに関しては、最終的なconfファイルを記載するかたちとしますー
+それでは、S3をINPUTにした取り込み方法について解説していきたいと思います。
+FILTERとOUTPUTに関しては、最終的なconfファイルを記載するかたちとします。
 
 === Install S3 Plugin
 S3をINPUTとしてログを取得するには、追加でプラグインをインストールする必要があります。
