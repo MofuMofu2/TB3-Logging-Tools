@@ -61,7 +61,6 @@ INPUTしたデータソースをLogstashのFilterで解析し、構造化しま�
 （@<href>{https://www.elastic.co/guide/en/logstash/current/filter-plugins.html}）が用意されています。
 くどいですが、このGrok Filterにフォーカスします！
 
-
 === OUTPUTS
 データを構造化したのち、任意の出力先にデータを送付します。
 Elasticsearch以外の出力先も多数提供されているので、環境に合わせてデータを送付できます。
