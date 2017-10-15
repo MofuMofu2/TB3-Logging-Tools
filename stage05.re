@@ -81,17 +81,9 @@ ASDM（Webベースの管理インターフェースを提供するツール）�
 なので、先ほどのフィールド定義をそのまま使用するので割愛します。
 
 
-//list[stage05-list04][これなんですかね？]{
-Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
-//}
-
-
 == GrokPatternをつくる
 それでは、GrokPatternを作っていきます。
 
-//list[stage05_list05][これも]{
-Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
-//}
 
 === 共通部分
 タイプスタンプとホスト名、イベントIDはすべてのログに入るメッセージのため、共通部分とします。
@@ -99,7 +91,7 @@ Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254
 
 タイムスタンプは、GrokPatternに @<code>{CISCOTIMESTAMP}を使用します。
 
-//list[stage05_list06][CISCOTIMESTAMPのGrokPattern]{
+//list[stage05_list04][CISCOTIMESTAMPのGrokPattern]{
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 //}
 
@@ -108,7 +100,7 @@ CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 また、先頭にスペースが必ず入るので@<code>{\s}を入れます。
 
 
-//list[stage05_list07][HOSTNAMEのGrokPattern]{
+//list[stage05_list05][HOSTNAMEのGrokPattern]{
 HOSTNAME \s%{NOTSPACE:hostname}
 //}
 
@@ -131,7 +123,7 @@ HOSTNAME \s%{NOTSPACE:hostname}
 共通部分を取り除いた部分の以下が対象ですね。
 
 
-//list[stage05_list09][イベントごとに異なる部分のログ（抜粋）]{
+//list[stage05_list08][イベントごとに異なる部分のログ（抜粋）]{
 : ASDM session number 0 from 192.168.1.254 ended
 //}
 
@@ -141,7 +133,7 @@ HOSTNAME \s%{NOTSPACE:hostname}
 フィールド定義で記載した通りですが、ASDMセッションNo.をフィールドとし、値が取得できればよいわけです。
 なので、以下のようになります。
 
-//list[stage05_list10][ASDMセッションNoのGrokPattern]{
+//list[stage05_list09][ASDMセッションNoのGrokPattern]{
 ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
 //}
 
@@ -155,7 +147,7 @@ ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
 
 最終的に先頭の@<code>{:}とスペースも含むので以下な感じになります。
 
-//list[stage05_list11][ASDMセッションNoのGrokPattern（完成版）]{
+//list[stage05_list10][ASDMセッションNoのGrokPattern（完成版）]{
 :\sASDM session number(?<ASDM-session-number>\s[0-9]+)
 //}
 
@@ -172,7 +164,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 これは、フィールド定義で説明したようにソースIPなので、GrokPatternの@<code>{IP}を使用し、不要な部分を取り除く必要があります。
 スペースと@<code>{from}が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
 
-//list[stage05_list13][ソースIPアドレスのGrokPattern]{
+//list[stage05_list11][ソースIPアドレスのGrokPattern]{
 (\sfrom\s%{IP:src_ip})
 //}
 
@@ -182,7 +174,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 先ほどのソースIPとの間にスペースがあるので@<code>{\s}を入れます。
 また、@<code>{started}は文字列なので@<code>{\b}を入れて以下な感じです。
 
-//list[stage05_list14][セッションステータスのGrokPattern]{
+//list[stage05_list12][セッションステータスのGrokPattern]{
 \s(?<session>\bstarted)
 //}
 
@@ -190,7 +182,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 ただ、もう一つのイベントID"606002"ですが、ステータスがendedしか変わりません。
 なので、先ほどのステータスに"started""ended"のどちらかを選択できるようにします。
 
-//list[stage05_list15][ステータスの選択を可能にする]{
+//list[stage05_list13][ステータスの選択を可能にする]{
 \s(?<session>\bstarted|\bended)
 //}
 
@@ -202,14 +194,14 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 == Grok Constructorでテスト
 パターンファイルを抽出し、テストを実施します。
 
-//list[stage05_list16][パターンファイルまとめ]{
+//list[stage05_list14][パターンファイルまとめ]{
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
 CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
 //}
 
 
-//list[stage05_list17][Grock用の設定]{
+//list[stage05_list15][Grock用の設定]{
 %{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}
 //}
 
@@ -258,7 +250,7 @@ Logstashのconfファイル作成して実行して動いたら勝ちパター�
 
 Apacheの時と同様に作成してみたのが以下です！ファイル名はasa.confとして保存しました。
 
-//list[stage05_list18][asa.conf]{
+//list[stage05_list16][asa.conf]{
 input {
   file {
   	path => "/etc/logstash/log/asa.log"
