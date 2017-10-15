@@ -105,7 +105,8 @@ IPORHOST内は@<code>{%{HOSTNAME}}と@<code>{%{IP}}で構成されており、�
 さらにHOSTNAMEとIP自体のGrokPatternは存在するかサイトで調べてみると…ありますね！
 
 //list[stage04_list05][HOSTNAMEのGrokPattern]{
-HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)
+HOSTNAME \b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\.(?:[0-9A-Za-z]
+[0-9A-Za-z-]{0,62}))*(\.?|\b)
 //}
 
 //list[stage04_list05x][IPのGrokPattern]{
