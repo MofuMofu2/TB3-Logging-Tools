@@ -43,7 +43,8 @@ Logstashのドキュメントは実装例は少し記載があるものの、ど
 //list[fluentd_error][fluentdのエラーログ]{
 Starting td-agent: 2017-10-08 10:15:48 +0900
 [error]: fluent/supervisor.rb:373:rescue in main_process:
-config error file="/etc/td-agent/td-agent.conf" error="'fields' parameter is required"
+config error file="/etc/td-agent/td-agent.conf"
+error="'fields' parameter is required"
 td-agent                                                   [FAILED]
 //}
 
@@ -57,7 +58,8 @@ directory=>"/usr/share/logstash/modules/fb_apache/configuration"}
 Initializing module {:module_name=>"netflow",
 :directory=>"/usr/share/logstash/modules/netflow/configuration"}
 [2017-10-01T13:12:22,578][WARN ][logstash.config.source.multilocal]
-Ignoring the 'pipelines.yml' file because modules or command line options are specified
+Ignoring the 'pipelines.yml'
+file because modules or command line options are specified
 [2017-10-01T13:12:22,962][INFO ][logstash.agent           ]
 Successfully started Logstash API endpoint {:port=>9600}
 [2017-10-01T13:12:23,399][ERROR][logstash.outputs.csv     ]
@@ -71,7 +73,8 @@ Missing a required setting for the csv output plugin:
   }
 [2017-10-01T13:12:23,401][ERROR][logstash.agent           ]
 Failed to execute action {:action=>LogStash::PipelineAction::Create/pipeline_id:main,
-	:exception=>"LogStash::ConfigurationError", :message=>"Something is wrong with your configuration."}
+:exception=>"LogStash::ConfigurationError",
+:message=>"Something is wrong with your configuration."}
 # この1セットが延々と出力される
 //}
 
