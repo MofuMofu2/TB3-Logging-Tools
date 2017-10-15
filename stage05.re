@@ -3,102 +3,123 @@
 前章でApacheのアクセスログを取り込めるようになりました。
 そこで既存のGrokPatternだけではどうにもならない系のログを対象にGrokしていきたいと思います。
 
-ちなみにですが、GrokPattenは様々なものが用意されてます。
-例えば、"Java"、"bind"、"Redis"など。
-また、FireWallという括りでCISCOのASAのGrokPatternが用意されているものもあります。
+ちなみにですが、GrokPattenはJava、bind、Redisなど様々なものが用意されてます。
+
+また、FireWallという括りでCiscoのASAのGrokPatternが用意されているものもあります。
 ただ、すべてがまかなえてるかと言うとまかなえてないです。
 
-なので、今回はCiscoのファイアウォール製品であるASAのログを取り込みたいと思いますー
+なので、今回はCiscoのファイアウォール製品であるASAのログを取り込みたいと思いますー。
 やっぱり企業を守っているファイアウォールがどんなログを出しているか気になりますよね！？（薄っぺらいw）
 あ、でも使えるGrokPatternは積極的に使います！
 当たり前ですが、"あるものは使う！"、"ないものは作る！"という心得でいきましょー
 
 
 といことで今回は以下のログを対象にしたいと思います。
- ※IPアドレスは、適当なプライベートIPアドレスを割り当てています
+IPアドレスは、適当なプライベートIPアドレスを割り当てています。
 
-* Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
-* Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
+//list[stage05-list01][Cisco ASAのログ]{
+Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
+Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
+//}
+
+
 
 いつも通りに以下のログ取り込みフローで進めたいと思います！
 
-<ログ取り込みフロー>
+
+//list[stage05_list02][ログの取り込みフロー（再掲）]{
 1. ログフォーマットを調べる
 2. フィールド定義
 3. GrokPatternをつくる
 4. Grok Constructorでテスト
-5. logstashを動かしてみる
+5. Logstashを動かしてみる
+//}
 
 
 === ログフォーマットを調べる
 まずは、ログフォーマットを調べる！
-Ciscoさんは丁寧にログフォーマットを掲載してます。
+Ciscoさんは丁寧にログフォーマットを掲載してます（URL:@<href>{https://www.cisco.com/c/en/us/td/docs/security/asa/syslog/b_syslog.html}）。
 
-（Cisco_syslog:@<href>{https://www.cisco.com/c/en/us/td/docs/security/asa/syslog/b_syslog.html}）
+…よく見るとわかりますが、数が多いw
 
-...よく見るとわかりますが、数が多いw
 まぁ、Ciscoって世界最大ですからねー(*ﾟ∀ﾟ)/ｱｯｹﾗｶﾝ
 
 まず該当するログフォーマットを探す方法ですが、以下のログに"%ASA-6-606001"という記載がありますので、このイベントNo.の"606001"で検索することができます。
 
 このログフォーマットは以下のようになっています。
 
-* %ASA-6-606001: ASDM session number number from IP_address started
-* %ASA-6-606002: ASDM session number number from IP_address ended
+//list[stage05-list03][ASAのログフォーマット]{
+%ASA-6-606001: ASDM session number number from IP_address started
+%ASA-6-606002: ASDM session number number from IP_address ended
+//}
 
-ASDMのセッションを開始した時と終了した時に出力するログですね。
-　※ASDMはWebベースの管理インターフェースを提供するツール
+
+
+ASDM（Webベースの管理インターフェースを提供するツール）のセッションを開始した時と終了した時に出力するログですね。
+
 
 
 === フィールド定義
-ではでは、フィールド定義ですが、左から順にやっていきます。
+ではでは、フィールド定義ですが、ログの左から順にやっていきます。
 先ほど見たログフォーマットには、タイムスタンプとASA-01というのがなかったと思います。
 これらは、ログに必ず記載されるので、こちらも定義します。
 
-* Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
-** timestamp: Jun 20 10:21:34 (date)
-** hostname: ASA-01 (string)
-** eventid: ASA-6-606001 (string)
-** ASDM-sesion-number: 0 (long)
-** src_ip: 192.168.1.254 (string)
-** status: started (string)
+ * Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
+ ** timestamp: Jun 20 10:21:34 (date)
+ ** hostname: ASA-01 (string)
+ ** eventid: ASA-6-606001 (string)
+ ** ASDM-sesion-number: 0 (long)
+ ** src_ip: 192.168.1.254 (string)
+ ** status: started (string)
 
 実際のログに記載されているメッセージ内容のすべてが、フィールドにマッピングされていないことがわかります。
-例えば、"ASDM session number"というメッセージに対して意味はなく、そのセッションナンバーが知りたいのです。
-そのため、フィールド名に"ASDM session number"とし、値としては取り込まないようにします。
-その他の"from"も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、src_ip（ソースIP）というフィールドにIPアドレスを値として取り込みたいと思います。
+例えば、@<code>{ASDM session number}というメッセージに対して意味はなく、そのセッションナンバーが知りたいのです。
+そのため、フィールド名に@<code>{ASDM session number}とし、値としては取り込まないようにします。
+その他の@<code>{from}も同様で、どこからのIPアドレスかを知りたいため、fromを取り除き、@<code>{src_ip}（ソースIP）というフィールドにIPアドレスを値として取り込みたいと思います。
 
-次のログですが、最後の"ended"しか変わらないということがわかります。
+次のログですが、最後の@<code>{ended}しか変わらないということがわかります。
 なので、先ほどのフィールド定義をそのまま使用するので割愛します。
 
-* Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
+//list[stage05-list04][これなんですかね？]{
+Jun 20 11:21:34 ASA-01 : %ASA-6-606002: ASDM session number 0 from 192.168.1.254 ended
+//}
 
 
 == GrokPatternをつくる
 それでは、GrokPatternを作っていきます。
 
-* Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
-
+//list[stage05_list05][これも]{
+Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
+//}
 
 === 共通部分
 タイプスタンプとホスト名、イベントIDはすべてのログに入るメッセージのため、共通部分とします。
 それでは、タイムスタンプとホスト名、イベントIDに取り掛かりたいと思います！
 
-タイムスタンプは、GrokPatternに"CISCOTIMESTAMP"を使用します。
+タイムスタンプは、GrokPatternに @<code>{CISCOTIMESTAMP}を使用します。
 
-* CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
+//list[stage05_list06][CISCOTIMESTAMPのGrokPattern]{
+CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
+//}
 
-また、ホスト名は、ユーザが自由に付与する名前のため、柔軟性を求めて"NOTSPACE"を使用します。
-また、先頭にスペースが必ず入るので"\s"を入れます。
 
-* HOSTNAME \s%{NOTSPACE:hostname}
+また、ホスト名は、ユーザが自由に付与する名前のため、柔軟性を求めて@<code>{NOTSPACE}を使用します。
+また、先頭にスペースが必ず入るので@<code>{\s}を入れます。
+
+
+//list[stage05_list07][HOSTNAMEのGrokPattern]{
+HOSTNAME \s%{NOTSPACE:hostname}
+//}
+
 
 イベントIDは、GrokPatternに用意されていないので、自分で作成します。
 自分でGrokPatternを作成する場合は以下のように作成します。
 
-* (?<hostname>ASA-\d{1}-\d{6})
-** GrokPatternを作成したい場合は、(?)で括り、<>内にフィールド名を任意に付与します
-** それ以降（ここでいうASAから始まる正規表現）にフィールドに入れたい正規表現を記載します
+ * (?<hostname>ASA-\d{1}-\d{6})
+ ** GrokPatternを作成したい場合は、(?)で括り、<>内にフィールド名を任意に付与します
+ ** それ以降（ここでいうASAから始まる正規表現）にフィールドに入れたい正規表現を記載します
+
+#@# list表記の方がよかった？（変更するならlist名はstage05_list08に）
 
 上記のように作成することで好きなGrokPatternを作成することができます。
 これをCustomPatternといいます。
@@ -108,24 +129,35 @@ ASDMのセッションを開始した時と終了した時に出力するログ�
 ここからはイベント毎に異なる固有部分のGrokPatternを作っていきます。
 共通部分を取り除いた部分の以下が対象ですね。
 
-* : ASDM session number 0 from 192.168.1.254 ended
+
+//list[stage05_list09][イベントごとに異なる部分のログ（抜粋）]{
+: ASDM session number 0 from 192.168.1.254 ended
+//}
+
 
 
 === ASDMセッションNo
 フィールド定義で記載した通りですが、ASDMセッションNo.をフィールドとし、値が取得できればよいわけです。
 なので、以下のようになります。
 
-* ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
+//list[stage05_list10][ASDMセッションNoのGrokPattern]{
+ASDM session number(?<ASDM-sesion-number>\s[0-9]+)
+//}
+
 
 これも見てわかる通り、CustomPatternで作成しています。
-一つ一つみていくと(?)の外に"ASDM session nubber"がありますね。
-これは、"ASDM session number"をマッチしても値は取得したくない場合に使うやり方です。
-なので、隣の"(?<ASDM-session-number>\s[0-9]+)"CustomPatternで取得した値が"ASDM-session-number"というフィールドに入るかたちです。
-正規表現部分は、"\s"のスペースと"[0-9]"の数字複数並んでも対応できるように"+"を使用してます。
+一つ一つみていくと@<code>{(?)}の外に@<code>{ASDM session nubber}がありますね。
+これは、@<code>{ASDM session nubber}をマッチしても値は取得したくない場合に使うやり方です。
+なので、隣の@<code>{(?<ASDM-session-number>\s[0-9]+)}というCustomPatternで取得した値が
+@<code>{ASDM-session-number}というフィールドに入ります。
+正規表現部分は、@<code>{\s}のスペースと@<code>{0-9}の数字が複数並んでも対応できるように@<code>{+}を使用してます。
 
-最終的に先頭の":"とスペースも含むので以下な感じになります。
+最終的に先頭の@<code>{:}とスペースも含むので以下な感じになります。
 
-* :\sASDM session number(?<ASDM-session-number>\s[0-9]+)
+//list[stage05_list11][ASDMセッションNoのGrokPattern（完成版）]{
+:\sASDM session number(?<ASDM-session-number>\s[0-9]+)
+//}
+
 
 
 === ソースIPアドレス
@@ -134,40 +166,52 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 あるものは使う、なければCustomPattern！
 
 * from 192.168.1.254
+#@#これはなくてもいいんじゃないか？listにするならstage05_list12
 
-これは、フィールド定義で説明したようにソースIPなので、GrokPatternの"IP"を使用し、不要な部分を取り除く必要があります。
-スペースと"from"が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
-結果、以下になります。
+これは、フィールド定義で説明したようにソースIPなので、GrokPatternの@<code>{IP}を使用し、不要な部分を取り除く必要があります。
+スペースと@<code>{from}が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
 
-* (\sfrom\s%{IP:src_ip})
+//list[stage05_list13][ソースIPアドレスのGrokPattern]{
+(\sfrom\s%{IP:src_ip})
+//}
 
 === ステータス
-最後にセッションステータスを表す"started"ですね。
+最後はセッションステータスを表す@<code>{started}ですね。
 これは、CustomPatternで対応します。
-先ほどのソースIPとの間にスペースがあるので"\s"を入れます。
-また、"started"は文字列なので"\b"を入れて以下な感じです。
+先ほどのソースIPとの間にスペースがあるので@<code>{s}を入れます。
+また、@<code>{started}は文字列なので@<code>{\b}を入れて以下な感じです。
 
-* \s(?<session>\bstarted)
+//list[stage05_list14][セッションステータスのGrokPattern]{
+\s(?<session>\bstarted)
+//}
+
 
 ただ、もう一つのイベントID"606002"ですが、ステータスがendedしか変わりません。
 なので、先ほどのステータスに"started""ended"のどちらかを選択できるようにします。
 
-* \s(?<session>\bstarted|\bended)
+//list[stage05_list15][ステータスの選択を可能にする]{
+\s(?<session>\bstarted|\bended)
+//}
 
-"|"パイプを入れることで選択できるようになります。
+
+@<code>{|}を入れることで選択できるようになります。
 これで整ったので、GrokConstructorでテストをしてみたいと思います。
 
 
 == Grok Constructorでテスト
 パターンファイルを抽出し、テストを実施します。
 
-* パターンファイル
-*+ CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
-*+ EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
-*+ CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+//list[stage05_list16][パターンファイルまとめ]{
+CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
+EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
+CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+//}
 
-* Grok
-** %{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}
+
+//list[stage05_list17][Grock用の設定]{
+%{CISCOTIMESTAMP:date}\s%{NOTSPACE:hostname}%{EVENTID}%{CISCOFW606001}
+//}
+
 
 実行結果は以下です！
 
@@ -178,7 +222,7 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 
 == logstashを動かしてみる
 ここまできましたね！
-ここまできたら後少し！ということでApacheのアクセスログの時と同様に作成していきたいと思いますー
+ここまできたら後少し！ということでApacheのアクセスログの時と同様にconfファイルを作成していきたいと思いますー
 
 今回もパターンファイルに外出ししたいと思います！
 
@@ -191,13 +235,14 @@ GrokPatternの"CISCOFW606001"に"606002"も含んでいるのですが、文字�
 $ vim patterns/asa_patterns
 CISCOTIMESTAMP %{MONTH} +%{MONTHDAY}(?: %{YEAR})? %{TIME}
 EVENTID \s: %(?<EventID>ASA-\d{1}-\d{6})
-CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
+CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)
+(\sfrom\s%{IP:src_ip})\s(?<session>\bstarted|\bended)
 //}
 
 これでパターンファイルの準備は完了です。
 
 補足ですが、パターンファイルをGrok Constructorでテストすることも可能です。
-実際に作成したパターンファイルでテストを実施した結果です。
+@<img>{stage05-02}は実際に作成したパターンファイルでテストを実施した結果です。
 
 //image[stage05-02][ASA Grok Constructor結果#02]{
   Grok Constructor
@@ -208,10 +253,9 @@ CISCOFW606001 :\sASDM\ssession\snumber(?<ASDM-session-number>\s[0-9]+)(\sfrom\s%
 ここまできましたね！
 Logstashのconfファイル作成して実行して動いたら勝ちパターン！
 
-Apacheの時と同様に作成してみたのが以下です！
+Apacheの時と同様に作成してみたのが以下です！ファイル名はasa.confとして保存しました。
 
-//cmd{
-$ vim conf.d/asa.conf
+//list[stage05_list18][asa.conf]{
 input {
   file {
   	path => "/etc/logstash/log/asa.log"
@@ -233,12 +277,12 @@ filter {
 output {
   stdout { codec => rubydebug }
 }
-}
+//}
 
 実行結果を以下に記載しますー
 
 //cmd{
-### EventID: 606001
+# EventID: 606001
 {
                  "src_ip" => "192.168.1.254",
                "hostname" => "ASA-01",
@@ -248,7 +292,8 @@ output {
     "ASDM-session-number" => " 0",
                 "EventID" => "ASA-6-606001"
 }
-### EventID: 606002
+
+# EventID: 606002
 {
                  "src_ip" => "192.168.1.254",
                "hostname" => "ASA-01",

@@ -1,12 +1,12 @@
 PREDEF:
-  - stage01.re
+  - introduction.re
 CHAPS:
   - chapterA.re
   - chapterB.re
   - chapterC.re
   - chapterD.re
   - chapterE.re
-  - stage01.re
+  - chapterF.re
   - stage02.re
   - stage03.re
   - stage04.re
