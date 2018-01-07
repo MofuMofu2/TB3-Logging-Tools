@@ -23,3 +23,10 @@
 @<code>{httpd_access.log}はファイルなので、@<code>{@type}は@<code>{tail}とします。
 @<code>{path}にはログファイルの配置先を指定しています。ファイルはjson形式なので@<code>{format}は
 @<code>{json}を指定しています。
+
+== データの出力先を指定
+
+次に@@<code>{match}を作成します。
+
+//list[plus-list02][パースしたログの出力先を設定]{
+//}
