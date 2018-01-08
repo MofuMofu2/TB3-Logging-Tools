@@ -26,6 +26,7 @@ Apacheのサイトにはログのフォーマットが詳細に記載されて�
 
 Apacheのアクセスログのログフォーマットは次のような感じで構成されています。
 
+#@#表形式に変更
  * LogFormat "%h %l %u %t \"%r\" %>s %b" common
  ** %h: サーバへリクエストしたクライアントIP
  ** %l: クライアントのアイデンティティ情報ですが、デフォルト取得しない設定になっているため、”-”（ハイフン）で表示される
@@ -41,6 +42,7 @@ Apacheのアクセスログのログフォーマットは次のような感じ�
 また、この時にタイプも定義しておくとよいです。
 てことで、()内にタイプを記載します。
 
+#@#表形式に変更
  * %hは、クライアントIPということで"clientip"(string)
  * %lは、アイデンティティ情報なので、"ident"(string)
  * %uは、認証なので、"auth"(string)
@@ -56,6 +58,7 @@ Apacheのアクセスログのログフォーマットは次のような感じ�
 5.10.83.30 - - [10/Oct/2000:13:55:36 -0700] "GET /test.html HTTP/1.0" 200 2326
 //}
 
+#@#fluentdもゴールをここに設定（Apache）
 
 //list[stage04_list03][Apacheログの整形後データ]{
 clientip: 5.10.83.30
@@ -70,9 +73,11 @@ bytes: 2326
 //}
 
 === GrokPatternをつくる
-#@#前の章で紹介してたので説明文は削除
+
 Grok Filterには、@<code>{GrokPattern}（@<href>{https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns}）
 という形であらかじめ正規表現のパターン定義が用意されているので、ふんだんに使っていきたいと思います。
+#@#Grok Patternとは、をもうすこし具体的に（参照方法・参考の仕方とか）
+
 ただ、GrokPatternにないものは自分で作成する必要があります！
 そこは、次章で説明したいと思いますm(_ _)m
 
@@ -85,10 +90,14 @@ GrokPatternを作成していくには、ログを左から順に攻略してい
 
 それではここからは先ほどフィールド定義した順番で解説していきます。
 
+#@# Grok Patternで作成した正規表現をどのようにLogstashのコンフィグに埋め込むのか詳しく
+#@# fluentdにもGrok Patternあるのか調べる
 
 === ClientIP
-ClientIPといことで、IPアドレスにマッチさせる必要があります。
+ClientIPということで、IPアドレスにマッチさせる必要があります。
 まずは、IPアドレスにマッチさせるためのGrokPatternがすでにないか、GrokPatternのサイト上で確認します。
+
+#@#具体例あると良い（GrokPatternのどこを参照するか？）
 
 …あるではないか！（茶番劇っぽくてすまそんです）
 
@@ -100,7 +109,6 @@ IPORHOST (?:%{HOSTNAME}|%{IP})
 
 IPORHOST内は@<code>{%{HOSTNAME}}と@<code>{%{IP}}で構成されており、それぞれがGrokPatternとして定義されています。
 よってHOSTNAMEとIPを別々に読み込むことが可能です。
-#@#ってことですか？
 
 さらにHOSTNAMEとIP自体のGrokPatternは存在するかサイトで調べてみると…ありますね！
 
@@ -141,6 +149,9 @@ IPORHOSTでHOSTNAMEとIPが定義されていることがわかったと思い�
 
 
 == Grok Constructorでテスト
+
+#@#Grok Constructorは補足にするか？（要相談）
+
 Grok Constructor（@<href>{http://grokconstructor.appspot.com/do/match}）は、作成したGrokがマッチするかをブラウザベースでテストすることが可能なツールです。
 この他にもGrokDebugger（@<href>{https://grokdebug.herokuapp.com/}）やKibanaのX-Packをインストールすることで、KibanaのDevToolsでGrokDebuggerを使ってテストもできます。
 であれば、KibanaのDevTools使えよ！というご意見もあるかと思いますが、手軽にGrok Filterのテストを実施したいためGrok Constructorを使用します。
@@ -294,6 +305,8 @@ responseは、ステータスコードなので、@<code>{NUMBER}を使用しま
 GrokPatternをFILTERに直接コーディングすることも可能ですが、可読性を意識したいため、GrokPatternをconfファイルとして外出しします。
 
 外出しするため、以下の作業を実施します。
+
+#@#ファイル名をvimで編集するファイルに追記（%{IPORHOST}の前）
 
 //cmd{
 # GrokPatternファイルを配置するためのディレクトリを作成
