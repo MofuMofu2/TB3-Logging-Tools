@@ -13,6 +13,7 @@
 この他にもCloudtrailやS3などもログを出力し、取り込むことが可能です。
 どこかでお披露目できればと考えてますヽ(*ﾟдﾟ)ノ
 
+#@#ALBに変更
 
 == ELBのログを取り込むよ！
 いままで説明した"ログ取り込みフロー"に乗っ取って進めたいと思います。
@@ -31,7 +32,7 @@ ELBのログフォーマットを調べたいと思います。
 うーん。。長い！
 ということで一つ一つ分解していきます。
 
-
+#@#表形式に変更
  * timestamp elb client:port backend:port request_processing_time backend_processing_time response_processing_time elb_status_code backend_status_code received_bytes sent_bytes "request" "user_agent" ssl_cipher ssl_protocol
  ** timestamp: ロードバランサーがクライアントからリクエストを受け取った時刻 (ISO 8601 形式)
  ** elb: ロードバランサーの名前
@@ -49,7 +50,7 @@ ELBのログフォーマットを調べたいと思います。
  ** ssl_cipher: SSL暗号化(暗号化されていない場合は"-")
  ** ssl_protocol: SSLプロトコル(暗号化されていない場合は"-")
 
-#@#やば
+#@#表形式に変更
 
 == フィールド定義
 ここからは、フィールド定義するよ！
@@ -60,6 +61,7 @@ ELBのログフォーマットを調べたいと思います。
 それではフィールドのタイプを決めていきたいと思いますのでサンプルログから当てはめて見たいと思います。
 サンプルログは、先ほどのリンクのAWS公式ドキュメントから使ってます。
 
+#@#表形式に変更
  * 2015-05-13T23:39:43.945958Z my-loadbalancer 5.10.83.30:2817 10.0.0.1:80 0.000073 0.001048 0.000057 200 200 0 29 "GET http://www.example.com:80/ HTTP/1.1" "curl/7.38.0" - -
  ** timestamp: 2015-05-13T23:39:43.945958Z (date)
  ** elb: my-loadbalancer (string)
@@ -266,6 +268,7 @@ FILTERとOUTPUTに関しては、最終的なconfファイルを記載するか�
 
 === Install S3 Plugin
 S3をINPUTとしてログを取得するには、追加でプラグインをインストールする必要があります。
+#@#Logstashに追加プラグインをインストールする方法を追記
 
 //list[stage06_list14][logstash-input-s3のインストール]{
 /usr/share/logstash/bin/logstash-plugin install logstash-input-s3
