@@ -66,6 +66,8 @@ ASDM（Webベースの管理インターフェースを提供するツール）�
 先ほど見たログフォーマットには、タイムスタンプとASA-01というのがなかったと思います。
 これらは、ログに必ず記載されるので、こちらも定義します。
 
+#@#表形式に変更
+
  * Jun 20 10:21:34 ASA-01 : %ASA-6-606001: ASDM session number 0 from 192.168.1.254 started
  ** timestamp: Jun 20 10:21:34 (date)
  ** hostname: ASA-01 (string)
@@ -110,11 +112,11 @@ HOSTNAME \s%{NOTSPACE:hostname}
 イベントIDは、GrokPatternに用意されていないので、自分で作成します。
 自分でGrokPatternを作成する場合は以下のように作成します。
 
+#@#表形式に変更
  * (?<hostname>ASA-\d{1}-\d{6})
  ** GrokPatternを作成したい場合は、(?)で括り、<>内にフィールド名を任意に付与します
  ** それ以降（ここでいうASAから始まる正規表現）にフィールドに入れたい正規表現を記載します
 
-#@# list表記の方がよかった？（変更するならlist名はstage05_list08に）
 
 上記のように作成することで好きなGrokPatternを作成することができます。
 これをCustomPatternといいます。
@@ -161,7 +163,6 @@ IPアドレスのGrokPatternのように他にも確立されているものは�
 あるものは使う、なければCustomPattern！
 
 * from 192.168.1.254
-#@#これはなくてもいいんじゃないか？listにするならstage05_list12
 
 これは、フィールド定義で説明したようにソースIPなので、GrokPatternの@<code>{IP}を使用し、不要な部分を取り除く必要があります。
 スペースと@<code>{from}が不要なのでGrokPatternの外側に出しますが、一つの文字列とするため()で囲います。
