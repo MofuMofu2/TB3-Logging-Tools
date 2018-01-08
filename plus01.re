@@ -1,7 +1,5 @@
 = fluentdでApacheのログをパースする
 
-#@#Logstashが先に来る場合
-
 では、これをfluentdで取得する場合、どのように記述すれば良いのでしょうか。
 データの取得元はLogstashのときと同様に、@<code>{httpd_access.log}とします。
 
@@ -31,7 +29,7 @@
 //list[plus-list02][パースしたログの出力先を設定]{
 <match>
 	@type stdout
-	output_type json
+	output_type hash
 </match>
 //}
 
@@ -54,7 +52,7 @@
 </source>
 <match>
 	@type stdout
-	output_type json
+	output_type hash
 </match>
 //}
 
