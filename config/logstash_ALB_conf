@@ -1,0 +1,29 @@
+input {
+  file {
+    path => "/var/log/aws/clb.log"
+    start_position => "beginning"
+  }
+}
+filter {
+  grok {
+    patterns_dir => ["/etc/logstash/patterns/elb_patterns"]
+    match => { "message" => "%{ALB_ACCESS_LOG}" }
+  }
+  date {
+    match => [ "date", "ISO8601" ]
+    timezone => "Asia/Tokyo"
+    target => "@timestamp"
+  }
+  geoip {
+    source => "client_ip"
+  }
+  mutate {
+    convert => [ "request_processing_time", "float" ]
+    convert => [ "response_processing_time", "float" ]
+    convert => [ "target_processing_time", "float" ]
+    remove_field => [ "date", 'message' ]
+  }
+}
+output {
+  stdout { codec => rubydebug }
+}
